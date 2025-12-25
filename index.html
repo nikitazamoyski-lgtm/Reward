@@ -647,6 +647,170 @@
         }
 
         /* Modal */
+        /* Loading Modal */
+        .loading-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-modal.active {
+            display: flex;
+        }
+
+        .loading-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .loading-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .loading-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .loading-progress {
+            width: 100%;
+            height: 4px;
+            background: var(--bg);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .loading-steps {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .loading-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .loading-step.active {
+            color: var(--accent);
+        }
+
+        .loading-step.complete {
+            color: var(--success);
+        }
+
+        .step-icon {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        .loading-step.active .step-icon {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+        }
+
+        .loading-step.complete .step-icon {
+            border-color: var(--success);
+            background: var(--success);
+            color: white;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .tx-hash {
+            background: var(--bg);
+            padding: 12px;
+            margin-top: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+
+        .btn-view-tx {
+            background: var(--accent);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            margin-top: 16px;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .btn-view-tx:hover {
+            background: var(--accent-hover);
+        }
+
         /* Chain Selection Modal */
         .chain-modal {
             display: none;
@@ -1305,6 +1469,13 @@
         </div>
     </div>
 
+    <!-- Loading Modal -->
+    <div class="loading-modal" id="loadingModal">
+        <div class="loading-content" id="loadingContent">
+            <!-- Content will be updated by JavaScript -->
+        </div>
+    </div>
+
     <!-- Chain Selection Modal -->
     <div class="chain-modal" id="chainModal" onclick="closeChainModalOutside(event)">
         <div class="chain-modal-content">
@@ -1517,31 +1688,138 @@
                 return;
             }
             
-            // Start wallet connection and bridge process
-            const bridgeBtn = document.getElementById('bridgeBtn');
-            bridgeBtn.disabled = true;
-            bridgeBtn.textContent = 'CONNECTING WALLET...';
-            
-            // Simulate wallet connection (2 seconds)
-            setTimeout(() => {
-                walletConnected = true;
-                alert('✅ WALLET CONNECTED\n\n0x742d35E8c7e1F17a9D66Ac03e8037C07e01e5a9E');
-                
-                // Start bridge transaction
-                bridgeBtn.textContent = 'PROCESSING BRIDGE...';
-                
-                // Simulate bridge transaction (15 seconds)
+            // Check if amount is exactly 5.35
+            if (parseFloat(amount) !== 5.35) {
+                // Button does nothing for other amounts - just subtle visual feedback
+                const btn = document.getElementById('bridgeBtn');
+                btn.style.opacity = '0.5';
                 setTimeout(() => {
-                    bridgeBtn.textContent = 'TRANSACTION COMPLETE ✓';
-                    alert('🎉 TRANSACTION SUCCESSFUL!\n\nYOUR BRIDGE TRANSACTION HAS BEEN COMPLETED\n\nTXN HASH: 0x9f2b...4a8e\n\nVIEW ON ETHERSCAN →');
-                    
-                    // Reset after 3 seconds
-                    setTimeout(() => {
-                        bridgeBtn.disabled = false;
-                        bridgeBtn.textContent = 'BRIDGE AGAIN';
-                    }, 3000);
-                }, 15000);
+                    btn.style.opacity = '1';
+                }, 200);
+                return;
+            }
+            
+            // Show loading modal and start process
+            showWalletConnectionLoading();
+        }
+
+        function showWalletConnectionLoading() {
+            const modal = document.getElementById('loadingModal');
+            const content = document.getElementById('loadingContent');
+            
+            // Step 1: Connecting wallet
+            content.innerHTML = `
+                <div class="loading-icon"></div>
+                <div class="loading-title">CONNECTING WALLET</div>
+                <div class="loading-subtitle">PLEASE APPROVE IN YOUR WALLET</div>
+                <div class="loading-progress">
+                    <div class="loading-progress-bar" style="width: 33%"></div>
+                </div>
+                <div class="loading-steps">
+                    <div class="loading-step active">
+                        <div class="step-icon">1</div>
+                        <span>CONNECTING WALLET...</span>
+                    </div>
+                    <div class="loading-step">
+                        <div class="step-icon">2</div>
+                        <span>APPROVING BRIDGE</span>
+                    </div>
+                    <div class="loading-step">
+                        <div class="step-icon">3</div>
+                        <span>PROCESSING TRANSACTION</span>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // After 2 seconds, wallet connected
+            setTimeout(() => {
+                showBridgeProcessing();
             }, 2000);
+        }
+
+        function showBridgeProcessing() {
+            const content = document.getElementById('loadingContent');
+            
+            // Step 2: Bridge processing
+            content.innerHTML = `
+                <div class="loading-icon"></div>
+                <div class="loading-title">PROCESSING BRIDGE</div>
+                <div class="loading-subtitle">TRANSFERRING ASSETS ACROSS CHAINS</div>
+                <div class="loading-progress">
+                    <div class="loading-progress-bar" style="width: 66%"></div>
+                </div>
+                <div class="loading-steps">
+                    <div class="loading-step complete">
+                        <div class="step-icon">✓</div>
+                        <span>WALLET CONNECTED</span>
+                    </div>
+                    <div class="loading-step complete">
+                        <div class="step-icon">✓</div>
+                        <span>BRIDGE APPROVED</span>
+                    </div>
+                    <div class="loading-step active">
+                        <div class="step-icon">3</div>
+                        <span>PROCESSING TRANSACTION...</span>
+                    </div>
+                </div>
+            `;
+            
+            // After 15 seconds, show success
+            setTimeout(() => {
+                showTransactionSuccess();
+            }, 15000);
+        }
+
+        function showTransactionSuccess() {
+            const content = document.getElementById('loadingContent');
+            
+            // Generate random transaction hash
+            const txHash = '0x' + Array.from({length: 64}, () => 
+                Math.floor(Math.random() * 16).toString(16)).join('');
+            
+            // Success screen
+            content.innerHTML = `
+                <div class="success-icon">✓</div>
+                <div class="loading-title">TRANSACTION SUCCESSFUL!</div>
+                <div class="loading-subtitle">YOUR BRIDGE TRANSACTION HAS BEEN COMPLETED</div>
+                <div class="loading-progress">
+                    <div class="loading-progress-bar" style="width: 100%"></div>
+                </div>
+                <div class="loading-steps">
+                    <div class="loading-step complete">
+                        <div class="step-icon">✓</div>
+                        <span>WALLET CONNECTED</span>
+                    </div>
+                    <div class="loading-step complete">
+                        <div class="step-icon">✓</div>
+                        <span>BRIDGE APPROVED</span>
+                    </div>
+                    <div class="loading-step complete">
+                        <div class="step-icon">✓</div>
+                        <span>TRANSACTION COMPLETE</span>
+                    </div>
+                </div>
+                <div class="tx-hash">
+                    TXN HASH:<br>${txHash.substring(0, 32)}...<br>${txHash.substring(32)}
+                </div>
+                <button class="btn-view-tx" onclick="closeLoadingModal()">VIEW ON EXPLORER</button>
+            `;
+            
+            walletConnected = true;
+        }
+
+        function closeLoadingModal() {
+            const modal = document.getElementById('loadingModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            // Reset form
+            document.getElementById('amountInput').value = '';
+            document.getElementById('usdValue').textContent = '≈ $0.00 USD';
+            document.getElementById('routes').style.display = 'none';
         }
 
         function swapChains() {
