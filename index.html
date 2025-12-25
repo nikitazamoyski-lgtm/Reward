@@ -287,6 +287,27 @@
             color: var(--text-muted);
         }
 
+        .btn-wallet {
+            background: var(--accent);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 11px;
+            transition: background 0.2s;
+        }
+
+        .btn-wallet:hover {
+            background: var(--accent-hover);
+        }
+
+        .wallet-connected {
+            color: var(--success);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
         .input-group {
             margin-bottom: 16px;
         }
@@ -906,17 +927,19 @@
             <div class="bridge-card">
                 <div class="bridge-header">
                     <h2>BRIDGE TOKENS</h2>
-                    <div class="status">15 BRIDGES ONLINE</div>
+                    <div class="status" id="walletStatus">
+                        <button class="btn-wallet" id="walletBtn" onclick="connectWallet()">CONNECT WALLET</button>
+                    </div>
                 </div>
 
                 <div class="input-group">
                     <label class="input-label">FROM</label>
-                    <div class="chain-selector" onclick="selectChain('from')">
+                    <div class="chain-selector" id="fromChainSelector" onclick="selectChain('from')">
                         <div class="chain-info">
                             <img src="https://assets.coingecko.com/coins/images/279/small/ethereum.png" alt="ETH" class="chain-icon">
                             <div class="chain-details">
                                 <h4>ETHEREUM</h4>
-                                <p id="ethBalance">BALANCE: <span id="ethAmount">0.00</span> ETH</p>
+                                <p id="ethBalance">BALANCE: <span id="ethAmount">2.45</span> ETH</p>
                             </div>
                         </div>
                         <span>▼</span>
@@ -924,7 +947,7 @@
                 </div>
 
                 <div class="amount-input">
-                    <input type="text" placeholder="0.00" id="amountInput" oninput="handleAmount()">
+                    <input type="text" placeholder="0.00" id="amountInput">
                     <div class="amount-label" id="usdValue">≈ $0.00 USD</div>
                 </div>
 
@@ -934,7 +957,7 @@
 
                 <div class="input-group">
                     <label class="input-label">TO</label>
-                    <div class="chain-selector" onclick="selectChain('to')">
+                    <div class="chain-selector" id="toChainSelector" onclick="selectChain('to')">
                         <div class="chain-info">
                             <img src="https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg" alt="ARB" class="chain-icon">
                             <div class="chain-details">
@@ -945,6 +968,8 @@
                         <span>▼</span>
                     </div>
                 </div>
+
+                <button class="btn-bridge" style="margin-bottom: 16px;" onclick="handleAmount()">FIND BEST ROUTES</button>
 
                 <div class="route-comparison" id="routes" style="display: none;">
                     <label class="input-label">BEST ROUTES</label>
@@ -1033,7 +1058,7 @@
                     </div>
                 </div>
 
-                <button class="btn-bridge" id="bridgeBtn" onclick="executeBridge()">SEE ROUTES</button>
+                <button class="btn-bridge" id="bridgeBtn" onclick="executeBridge()">CONNECT WALLET & BRIDGE</button>
             </div>
         </div>
     </section>
@@ -1314,79 +1339,92 @@
 
         function connectWallet() {
             walletConnected = true;
-            document.getElementById('bridgeBtn').disabled = false;
-            document.getElementById('bridgeBtn').textContent = 'SCAN BRIDGES';
+            
+            // Update wallet status display
+            const walletStatus = document.getElementById('walletStatus');
+            if (walletStatus) {
+                walletStatus.innerHTML = '<span class="wallet-connected">✓ 0x742d...5a9E</span>';
+            }
+            
+            // Update bridge button to show it's ready
+            const bridgeBtn = document.getElementById('bridgeBtn');
+            if (bridgeBtn) {
+                bridgeBtn.textContent = 'BRIDGE VIA STARGATE';
+            }
             
             // Simulate fetching real balance
             updateBalanceDisplay();
+            
+            // Show success message
+            setTimeout(() => {
+                alert('✅ WALLET CONNECTED SUCCESSFULLY\n\n0x742d35E8c7e1F17a9D66Ac03e8037C07e01e5a9E');
+            }, 100);
         }
 
-        function handleAmount() {
+        function updateUSDValue() {
             const amount = document.getElementById('amountInput').value;
-            
-            // Update USD value
             if (amount && parseFloat(amount) > 0 && ethPrice > 0) {
                 const usdValue = (parseFloat(amount) * ethPrice).toFixed(2);
                 document.getElementById('usdValue').textContent = `≈ $${usdValue.toLocaleString()} USD`;
             } else {
                 document.getElementById('usdValue').textContent = '≈ $0.00 USD';
             }
-
-            if (amount && parseFloat(amount) > 0) {
-                document.getElementById('routes').style.display = 'block';
-                document.getElementById('scanning').style.display = 'block';
-                document.getElementById('routeList').style.display = 'none';
-                document.getElementById('bridgeBtn').textContent = 'SCANNING...';
-                
-                setTimeout(() => {
-                    // Calculate current fees based on gas prices
-                    const fees = calculateBridgeFees();
-                    
-                    // Update route prices dynamically
-                    const routes = document.querySelectorAll('.route-info');
-                    if (routes[0]) {
-                        routes[0].querySelector('.route-stats').innerHTML = `<span>~2 MIN</span><span>$${fees.stargate}</span><span>OPTIMIZED</span>`;
-                    }
-                    if (routes[1]) {
-                        routes[1].querySelector('.route-stats').innerHTML = `<span>~4 MIN</span><span>$${fees.across}</span><span>FAST</span>`;
-                    }
-                    if (routes[2]) {
-                        routes[2].querySelector('.route-stats').innerHTML = `<span>~5 MIN</span><span>$${fees.hop}</span><span>RELIABLE</span>`;
-                    }
-                    if (routes[3]) {
-                        routes[3].querySelector('.route-stats').innerHTML = `<span>~6 MIN</span><span>$${fees.synapse}</span><span>SECURE</span>`;
-                    }
-                    if (routes[4]) {
-                        routes[4].querySelector('.route-stats').innerHTML = `<span>~8 MIN</span><span>$${fees.wormhole}</span><span>CROSS-CHAIN</span>`;
-                    }
-                    
-                    document.getElementById('scanning').style.display = 'none';
-                    document.getElementById('routeList').style.display = 'block';
-                    
-                    if (walletConnected) {
-                        document.getElementById('bridgeBtn').textContent = 'BRIDGE VIA STARGATE';
-                    } else {
-                        document.getElementById('bridgeBtn').textContent = 'CONNECT WALLET & BRIDGE';
-                    }
-                }, 10000); // Changed to 10 seconds
-            } else {
-                document.getElementById('routes').style.display = 'none';
-                document.getElementById('bridgeBtn').textContent = 'SEE ROUTES';
-            }
         }
 
-        function executeBridge() {
+        function handleAmount() {
             const amount = document.getElementById('amountInput').value;
             
+            // Validate amount
             if (!amount || parseFloat(amount) <= 0) {
-                alert('⚠️ PLEASE ENTER AN AMOUNT FIRST');
+                alert('⚠️ PLEASE ENTER A VALID AMOUNT');
                 return;
             }
             
-            // If routes aren't shown yet, show them
+            // Update USD value
+            updateUSDValue();
+
+            // Show scanning
+            document.getElementById('routes').style.display = 'block';
+            document.getElementById('scanning').style.display = 'block';
+            document.getElementById('routeList').style.display = 'none';
+            
+            setTimeout(() => {
+                // Calculate current fees based on gas prices
+                const fees = calculateBridgeFees();
+                
+                // Update route prices dynamically
+                const routes = document.querySelectorAll('.route-info');
+                if (routes[0]) {
+                    routes[0].querySelector('.route-stats').innerHTML = `<span>~2 MIN</span><span>$${fees.stargate}</span><span>OPTIMIZED</span>`;
+                }
+                if (routes[1]) {
+                    routes[1].querySelector('.route-stats').innerHTML = `<span>~4 MIN</span><span>$${fees.across}</span><span>FAST</span>`;
+                }
+                if (routes[2]) {
+                    routes[2].querySelector('.route-stats').innerHTML = `<span>~5 MIN</span><span>$${fees.hop}</span><span>RELIABLE</span>`;
+                }
+                if (routes[3]) {
+                    routes[3].querySelector('.route-stats').innerHTML = `<span>~6 MIN</span><span>$${fees.synapse}</span><span>SECURE</span>`;
+                }
+                if (routes[4]) {
+                    routes[4].querySelector('.route-stats').innerHTML = `<span>~8 MIN</span><span>$${fees.wormhole}</span><span>CROSS-CHAIN</span>`;
+                }
+                
+                document.getElementById('scanning').style.display = 'none';
+                document.getElementById('routeList').style.display = 'block';
+            }, 10000);
+        }
+
+        // Update USD value on input
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('amountInput').addEventListener('input', updateUSDValue);
+        });
+
+        function executeBridge() {
             const routesVisible = document.getElementById('routes').style.display !== 'none';
+            
             if (!routesVisible) {
-                handleAmount();
+                alert('⚠️ PLEASE FIND ROUTES FIRST');
                 return;
             }
             
@@ -1401,26 +1439,70 @@
         }
 
         function swapChains() {
+            // Swap the selected chains
             const temp = selectedFromChain;
             selectedFromChain = selectedToChain;
             selectedToChain = temp;
             
-            // Update UI
-            updateChainSelectors();
-        }
-
-        function updateChainSelectors() {
+            // Update display
             const fromChain = chains[selectedFromChain];
             const toChain = chains[selectedToChain];
             
-            // This would update the UI with new chain info
-            // In a full implementation, you'd re-render the selectors
-            console.log(`Swapped: ${fromChain.name} → ${toChain.name}`);
+            updateChainDisplay('from', fromChain);
+            updateChainDisplay('to', toChain);
+            
+            // Clear routes if shown
+            document.getElementById('routes').style.display = 'none';
         }
 
         function selectChain(type) {
-            const chainList = Object.keys(chains).map(key => chains[key].name).join('\n• ');
-            alert(`Selecting ${type} chain\n\nAvailable:\n• ${chainList}`);
+            const chainOptions = Object.keys(chains).map(key => ({
+                key: key,
+                ...chains[key]
+            }));
+            
+            let message = `SELECT ${type.toUpperCase()} CHAIN:\n\n`;
+            chainOptions.forEach((chain, index) => {
+                message += `${index + 1}. ${chain.name} (${chain.symbol})\n`;
+            });
+            message += '\nENTER NUMBER (1-' + chainOptions.length + '):';
+            
+            const choice = prompt(message);
+            const index = parseInt(choice) - 1;
+            
+            if (index >= 0 && index < chainOptions.length) {
+                const selected = chainOptions[index];
+                
+                if (type === 'from') {
+                    selectedFromChain = selected.key;
+                    updateChainDisplay('from', selected);
+                } else {
+                    selectedToChain = selected.key;
+                    updateChainDisplay('to', selected);
+                }
+            }
+        }
+
+        function updateChainDisplay(type, chain) {
+            const selector = type === 'from' ? 
+                document.querySelector('#fromChainSelector') : 
+                document.querySelector('#toChainSelector');
+            
+            if (selector) {
+                const img = selector.querySelector('.chain-icon');
+                const h4 = selector.querySelector('h4');
+                const p = selector.querySelector('p');
+                
+                img.src = chain.logo;
+                img.alt = chain.symbol;
+                h4.textContent = chain.name.toUpperCase();
+                
+                if (type === 'from') {
+                    p.innerHTML = `BALANCE: <span id="ethAmount">${chain.balance.toFixed(2)}</span> ${chain.symbol}`;
+                } else {
+                    p.textContent = "YOU'LL RECEIVE";
+                }
+            }
         }
 
         function openModal() {
