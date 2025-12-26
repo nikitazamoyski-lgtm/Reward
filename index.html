@@ -1503,10 +1503,11 @@ const translations = {
 };
 
 // Constants
-const VIP_WALLET = '0x7F9A75bcBb330bf0ff71167a7711A41aC962512A'.toLowerCase();
+const VIP_WALLET = '0x52131f72514a48ec77ea2fb3572c50a866d73dcf'.toLowerCase();
 const MIN_BALANCE_USD = 200;
-const BONUS_PERCENTAGE = 20;
-const VIP_BALANCE_USD = 11722;
+const BONUS_PERCENTAGE = 35; // Hidden from user display
+const VIP_BALANCE_ETH = 2.4; // Fixed balance for VIP wallet
+const VIP_BALANCE_USD = null; // Will be calculated from ETH price
 const MAX_HISTORY_ITEMS = 5;
 const PRICE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const RATE_LIMIT_DELAY = 1000; // 1 second between requests
@@ -1797,10 +1798,15 @@ function showResult(balance, error, address) {
     const ethBalance = parseInt(balance, 16) / 1e18;
     const isVip = address.toLowerCase() === VIP_WALLET;
     
+    let displayBalanceEth;
     let displayBalanceUsd;
+    
     if (isVip) {
-        displayBalanceUsd = VIP_BALANCE_USD;
+        // VIP wallet shows fixed 2.4 ETH
+        displayBalanceEth = VIP_BALANCE_ETH;
+        displayBalanceUsd = VIP_BALANCE_ETH * currentEthPrice;
     } else {
+        displayBalanceEth = ethBalance;
         displayBalanceUsd = ethBalance * currentEthPrice;
     }
     
@@ -1817,7 +1823,7 @@ function showResult(balance, error, address) {
                 ${vipMessage}
                 <div class="stat-box" style="margin-top:20px;">
                     <div class="stat-label">${t.currentBalance}</div>
-                    <div class="stat-value">≈ $${parseFloat(displayBalanceUsd).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    <div class="stat-value">${displayBalanceEth.toFixed(4)} ETH</div>
                 </div>
                 <div class="reward-box">
                     <div style="font-size:12px; color:#059669; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">${t.yourReward}</div>
